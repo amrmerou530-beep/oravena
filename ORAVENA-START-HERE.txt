@@ -24,6 +24,8 @@ https://USERNAME.github.io/REPOSITORY/login.html?oauth=google
 
 ثالثًا: ملفات Supabase
 - قاعدة البيانات الحالية وحسابات المستخدمين لا تتغير عند تغيير GitHub.
+- مهم جدًا قبل اختبار حفظ العملاء والحسابات: شغّل الملف كاملًا مرة واحدة داخل SQL Editor:
+  supabase/ORAVENA-PERSISTENCE-FIX-V16.sql
 - عند الحاجة إلى إعادة تفعيل الحجز والبريد شغّل:
   supabase/ORAVENA-BOOKING-EMAIL-AUTH.sql
 - ملف التصفير النهائي المصحح هو:
