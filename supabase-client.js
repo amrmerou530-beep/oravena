@@ -88,6 +88,26 @@
       return request('/rest/v1/rpc/create_appointment_request',{method:'POST',body:JSON.stringify(payload)});
     }
   }
+  async function loadServices(){
+    const rows=await request('/rest/v1/clinic_services?select=*&active=eq.true&order=sort_order.asc,name_ar.asc',{authenticated:false});
+    return (rows||[]).map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||s.name_ar,nameEn:s.name_en||s.name_ar,status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)}));
+  }
+  async function saveService(data,id=''){
+    const body={
+      name_ar:String(data.nameAr||'').trim(),
+      name_tr:String(data.nameTr||'').trim()||null,
+      name_en:String(data.nameEn||'').trim()||null,
+      active:data.status==='متاحة',
+      sort_order:Number(data.sortOrder||0),
+      updated_at:new Date().toISOString()
+    };
+    const path=id?`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/clinic_services?select=*';
+    const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
+    return rows?.[0];
+  }
+  async function deleteService(id){
+    return request(`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  }
   const appointmentStatusToDb={
     'طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
   };
@@ -129,7 +149,7 @@
       appointment_date:data.date||null,
       appointment_time:data.time||null,
       doctor_name:data.doctor||null,
-      status:appointmentStatusToDb[data.status]||data.status||'new_request',
+      status:data.status==='غير محدد'?'new_request':appointmentStatusToDb[data.status]||data.status||'new_request',
       change_reason:data.changeReason||null,
       updated_at:new Date().toISOString()
     };
@@ -145,11 +165,12 @@
   }
   async function loadCore(){
     const account=read(ACCESS_KEY);
-    const [patients,appointments,records,staff]=await Promise.all([
+    const [patients,appointments,records,staff,services]=await Promise.all([
       request('/rest/v1/patients?select=*&order=created_at.desc'),
       request('/rest/v1/appointments?select=*,patients(full_name,file_number)&order=created_at.desc'),
       request('/rest/v1/clinic_records?select=*&order=created_at.desc'),
-      account?.account_type==='admin'?request('/rest/v1/staff_invitations?select=*&order=created_at.desc'):Promise.resolve([])
+      account?.account_type==='admin'?request('/rest/v1/staff_invitations?select=*&order=created_at.desc'):Promise.resolve([]),
+      request('/rest/v1/clinic_services?select=*&order=sort_order.asc,name_ar.asc').catch(()=>[])
     ]);
     const recordMap={session:'sessions',treatment_plan:'plans',prescription:'prescriptions',imaging:'imaging',finance:'finance',inventory:'inventory',lab:'labs',message:'messages',notification:'notifications',audit:'audit'};
     const mapped={sessions:[],plans:[],prescriptions:[],imaging:[],finance:[],inventory:[],labs:[],messages:[],notifications:[],audit:[]};
@@ -175,6 +196,7 @@
       appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.patients?.full_name||a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:a.appointment_time||'',doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at})),
       ...mapped,
       teeth,toothRecordIds,settings,settingsRecordId,
+      services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),
       staff:staff.map(s=>({id:s.id,name:s.full_name,email:s.email,systemRole:s.account_type,role:s.job_title||'',phone:s.phone||'',shift:'',status:({pending:'بانتظار التفعيل',activated:'نشط',suspended:'موقوف'})[s.status]||s.status,permissions:(s.sections||[]).join(','),permissionTemplates:(s.permission_templates||[]).join(',')}))
     };
   }
@@ -238,5 +260,5 @@
     }
     return {data,access:null};
   }
-  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,savePatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
+  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
 })();

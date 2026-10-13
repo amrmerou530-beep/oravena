@@ -170,14 +170,14 @@
       <label><span data-i18n="phone">رقم الهاتف</span><input name="phone" type="tel" autocomplete="tel" required></label>
       <label><span data-i18n="nationalId">رقم الهوية (اختياري)</span><input name="nationalId" inputmode="numeric"></label>
       <label><span data-i18n="age">السن</span><input name="age" type="number" min="0" max="120" required></label>
-      <label><span data-i18n="service">الخدمة المطلوبة</span><textarea name="service" rows="3" placeholder="اكتب الخدمة أو سبب الزيارة" required></textarea></label>
+      <label><span data-i18n="service">الخدمة المطلوبة</span><select id="bookingService" name="service" required><option value="غير محدد">غير محدد</option></select></label>
       <button class="button button-primary full" type="submit" data-i18n="sendRequest">إرسال الطلب</button>
       <p class="form-status" id="bookingStatus" role="status"></p>
     </form>
   </dialog>
 
   <script src="supabase-config.js?v=9"></script>
-  <script src="supabase-client.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="supabase-client.js?v=17"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
