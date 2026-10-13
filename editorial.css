@@ -1,0 +1,35 @@
+/* Warm editorial treatment for the ORAVENA story and patient account. */
+.subpage{--paper:#f4f0e8;--paper-deep:#e8e0d4;background:var(--paper);color:#243b3e}
+.subpage .story-topbar.scrolled{background:#f7f3eceb;color:#21383b;border-color:#243b3e1c}
+.story-hero{min-height:760px}
+.story-hero>img{transform:scale(1.06);transition:transform .1s linear}
+.story-hero-copy{max-width:880px}
+.story-hero h1,.chapter-copy h2,.story-finale h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em}
+.story-hero h1{font-size:clamp(4rem,8vw,8.4rem)}
+html[lang=ar] .story-hero h1,html[lang=ar] .chapter-copy h2,html[lang=ar] .story-finale h2{font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-weight:750;letter-spacing:0;line-height:1.14}
+.story-chapter{min-height:92vh;border-bottom:1px solid #263d4016}
+.story-chapter.light{background:var(--paper)}
+.story-chapter.aqua{background:var(--paper-deep)}
+.story-chapter.dark{background:#173c40}
+.story-chapter.privacy{background:#102b2e}
+.chapter-number{font-family:Georgia,serif;font-weight:400}
+.story-chapter blockquote{background:#fffaf2;border-radius:2px;padding:clamp(30px,5vw,62px);box-shadow:0 28px 80px #40372c12}
+.privacy-card{border-radius:3px}
+.story-finale{background:#f8f5ef}
+.story-finale .button{border-radius:4px}
+body[data-role=patient]{--bg:#f3f0e9;--panel:#fffdf9;--line:#ddd7cc;--ink:#17383b;background:var(--bg)}
+body[data-role=patient] .side{background:#12383c}
+body[data-role=patient] .mode-tag{background:#ffffff12;border-color:#ffffff1c}
+body[data-role=patient] .sys-top{background:#f8f5efeb;backdrop-filter:blur(20px);border-bottom:1px solid #dcd5ca}
+body[data-role=patient] .workspace{background:linear-gradient(180deg,#f5f2ec,#eee9df);min-height:100vh}
+body[data-role=patient] .page-head h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(2.1rem,4vw,4rem);font-weight:500;letter-spacing:-.04em}
+body[data-role=patient] .stat,body[data-role=patient] .panel,body[data-role=patient] .notice,body[data-role=patient] .patient-context{background:var(--panel);border-color:#ded8ce;border-radius:4px;box-shadow:0 18px 55px #443a2f0b}
+body[data-role=patient] .stat strong{font-family:Georgia,"Times New Roman",serif;font-weight:500;color:#0d5963}
+body[data-role=patient] .panel h2{font-family:Georgia,"Times New Roman",serif;font-size:1.55rem;font-weight:500}
+html[lang=ar] body[data-role=patient] .page-head h1,html[lang=ar] body[data-role=patient] .stat strong,html[lang=ar] body[data-role=patient] .panel h2{font-family:Tahoma,"Segoe UI",Arial,sans-serif;letter-spacing:0}
+body[data-role=patient] .quick-actions button,body[data-role=patient] .primary,body[data-role=patient] .secondary{border-radius:4px}
+body[data-role=patient] .progress-bar{height:5px;background:#dfdbd2}
+body[data-role=patient] .data-table th{background:#eee9df}
+body[data-role=patient] .record-hero{border-radius:4px;background:linear-gradient(130deg,#12383c,#1a5559)}
+body[data-role=patient] .profile-grid>div{border-radius:4px;background:#fffdf9;border-color:#ded8ce}
+@media(max-width:640px){.story-hero h1{font-size:3.6rem}.story-chapter{min-height:auto}.story-hero-copy{width:auto}}

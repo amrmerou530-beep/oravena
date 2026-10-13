@@ -1,0 +1,36 @@
+ORAVENA — الرفع من حساب GitHub جديد
+
+أولًا: رفع الموقع
+1) فك ضغط الحزمة على جهازك.
+2) أنشئ مستودعًا جديدًا في حساب GitHub الجديد.
+3) ارفع محتويات المجلد نفسها، وتأكد أن index.html موجود في جذر المستودع.
+4) افتح Settings > Pages.
+5) اختر Deploy from a branch ثم main و /root واضغط Save.
+6) انتظر حتى يظهر رابط الموقع الجديد.
+
+ثانيًا: تحديث رابط تسجيل الدخول
+استبدل USERNAME وREPOSITORY في المثال التالي ببيانات الرابط الجديد:
+
+https://USERNAME.github.io/REPOSITORY/
+
+داخل Supabase افتح:
+Authentication > URL Configuration
+
+Site URL:
+https://USERNAME.github.io/REPOSITORY/
+
+Redirect URLs:
+https://USERNAME.github.io/REPOSITORY/login.html?oauth=google
+
+ثالثًا: ملفات Supabase
+- قاعدة البيانات الحالية وحسابات المستخدمين لا تتغير عند تغيير GitHub.
+- عند الحاجة إلى إعادة تفعيل الحجز والبريد شغّل:
+  supabase/ORAVENA-BOOKING-EMAIL-AUTH.sql
+- ملف التصفير النهائي المصحح هو:
+  supabase/ORAVENA-RESET-DATA-V14.sql
+
+مهم:
+- لا ترفع ملف ZIP نفسه إلى المستودع؛ ارفع الملفات بعد فك الضغط.
+- لا تضع مفتاح Secret أو Service Role داخل ملفات الموقع.
+- supabase-config.js يحتوي فقط على بيانات الاتصال العامة الحالية.
+- تسجيل Google والحسابات والصلاحيات ستظل مرتبطة بنفس مشروع Supabase.

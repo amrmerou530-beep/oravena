@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d5963">
+  <meta name="description" content="ORAVENA — رعاية أسنان حديثة، حجز مواعيد واضح، ومتابعة علاجية رقمية آمنة.">
+  <title>ORAVENA</title>
+  <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
+  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="story.css?v=9">
+  <link rel="stylesheet" href="cinematic.css?v=11">
+</head>
+<body class="cinematic-home">
+  <a class="skip-link" href="#main">انتقل إلى المحتوى</a>
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#home" aria-label="ORAVENA - الرئيسية">
+      <img src="assets/oravena-logo-new.png" alt="ORAVENA">
+    </a>
+    <nav class="desktop-nav" aria-label="التنقل الرئيسي">
+      <a href="index.html" data-i18n="navHome">الرئيسية</a>
+      <a href="about.html" data-i18n="navStory">قصتنا</a>
+      <a class="account-link" href="login.html" data-i18n="navAccount">حسابي</a>
+    </nav>
+    <div class="header-actions">
+      <button class="language-button" id="languageButton" type="button" aria-label="تغيير اللغة">AR</button>
+      <a class="button button-glass desktop-only role-access" href="system.html" hidden>لوحة العمل</a>
+      <button class="button button-primary desktop-only" data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button>
+      <button class="menu-button" id="menuButton" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="فتح القائمة">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="التنقل على الهاتف" hidden>
+    <a href="index.html" data-i18n="navHome">الرئيسية</a>
+    <a href="about.html" data-i18n="navStory">قصتنا</a>
+    <a class="account-link" href="login.html" data-i18n="navAccount">حسابي</a>
+    <a class="button button-glass role-access" href="system.html" hidden>لوحة العمل</a>
+    <button class="button button-primary" data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button>
+  </nav>
+
+  <main id="main">
+    <section class="hero" id="home" aria-labelledby="heroTitle">
+      <video id="heroVideo" class="hero-media" autoplay muted playsinline poster="assets/oravena-video-poster.jpg" aria-label="فيديو استقبال ORAVENA" data-status="final" data-full-src="assets/oravena-welcome-full.mp4" data-short-src="assets/oravena-welcome-short.mp4">
+        <source id="heroVideoSource" src="assets/oravena-welcome-full.mp4" type="video/mp4">
+      </video>
+      <div class="hero-scrim"></div>
+      <div class="hero-content">
+        <p class="eyebrow" data-i18n="heroEyebrow">رعاية تبدأ بالاستماع</p>
+        <h1 id="heroTitle" data-i18n="heroTitle">ابتسامتك في رعاية<br><em>أوضح وأهدأ</em></h1>
+        <p class="hero-copy" data-i18n="heroCopy">من أول موعد إلى آخر متابعة، كل خطوة في خطتك واضحة ومحفوظة وآمنة.</p>
+        <div class="hero-actions">
+          <button class="button button-light" data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button>
+          <a class="button button-glass account-link" href="login.html" data-i18n="patientLogin">دخول المريض</a>
+          <a class="button button-link" href="about.html" data-i18n="meetClinic">تعرّف على العيادة</a>
+        </div>
+      </div>
+      <a class="scroll-cue" href="#services" aria-label="استكشف الصفحة"><span></span></a>
+    </section>
+
+    <section class="promise-strip" aria-label="مبادئ الرعاية">
+      <div><strong data-i18n="promise1Title">خطة واضحة</strong><span data-i18n="promise1Text">تفاصيل العلاج قبل البداية</span></div>
+      <div><strong data-i18n="promise2Title">ملف آمن</strong><span data-i18n="promise2Text">خصوصية وصلاحيات دقيقة</span></div>
+      <div><strong data-i18n="promise3Title">متابعة مستمرة</strong><span data-i18n="promise3Text">مواعيد وتعليمات في مكان واحد</span></div>
+    </section>
+
+    <section class="section services" id="services">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow dark" data-i18n="servicesEyebrow">العناية التي تحتاجها</p>
+          <h2 data-i18n="servicesTitle">رعاية متكاملة،<br>بخطوات مفهومة</h2>
+        </div>
+        <p data-i18n="servicesCopy">نبدأ بالتشخيص الدقيق، نشرح البدائل والتكلفة، ثم نبني خطة تناسب حالتك وأولوياتك.</p>
+      </div>
+      <div class="service-grid">
+        <article class="service-card featured">
+          <div class="service-number">01</div>
+          <div class="service-icon" aria-hidden="true">✦</div>
+          <h3 data-i18n="service1">الفحص والتشخيص</h3>
+          <p data-i18n="service1Text">فحص شامل وصور رقمية وخطة علاج موثقة يمكنك الرجوع إليها.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-number">02</div>
+          <div class="service-icon" aria-hidden="true">◌</div>
+          <h3 data-i18n="service2">العلاج والترميم</h3>
+          <p data-i18n="service2Text">حلول تحفظ الأسنان وتعيد وظيفتها ومظهرها بأقل تدخل مناسب.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-number">03</div>
+          <div class="service-icon" aria-hidden="true">⌁</div>
+          <h3 data-i18n="service3">التقويم والابتسامة</h3>
+          <p data-i18n="service3Text">تخطيط رقمي ومتابعة منتظمة لنتيجة طبيعية ومتوازنة.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-number">04</div>
+          <div class="service-icon" aria-hidden="true">+</div>
+          <h3 data-i18n="service4">الزراعة والجراحة</h3>
+          <p data-i18n="service4Text">تقييم دقيق للحالة وخيارات علاج واضحة قبل أي إجراء.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section journey" id="journey">
+      <div class="journey-intro">
+        <p class="eyebrow" data-i18n="journeyEyebrow">من أول زيارة</p>
+        <h2 data-i18n="journeyTitle">أنت تعرف دائمًا<br>ما الخطوة التالية</h2>
+        <p data-i18n="journeyCopy">لا مفاجآت ولا أوراق مشتتة. الموعد والخطة والجلسات والحساب والمتابعة مترابطة في رحلة واحدة.</p>
+      </div>
+      <ol class="journey-steps">
+        <li><span>01</span><div><strong data-i18n="step1">احجز بسهولة</strong><p data-i18n="step1Text">اختر الخدمة والوقت وأرسل طلب الموعد.</p></div></li>
+        <li><span>02</span><div><strong data-i18n="step2">افهم حالتك</strong><p data-i18n="step2Text">شاهد التشخيص والخطة والتكلفة قبل الاعتماد.</p></div></li>
+        <li><span>03</span><div><strong data-i18n="step3">تابع تقدمك</strong><p data-i18n="step3Text">ملخص كل جلسة والتعليمات والموعد التالي.</p></div></li>
+        <li><span>04</span><div><strong data-i18n="step4">احتفظ بملفك</strong><p data-i18n="step4Text">ملفاتك المسموح بها متاحة بأمان عند الحاجة.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="section care" id="care">
+      <div class="care-copy">
+        <p class="eyebrow dark">ORAVENA CARE</p>
+        <h2 data-i18n="careTitle">علاجك معك،<br>من غير تعقيد</h2>
+        <p data-i18n="careCopy">حساب واحد يجمع ما سمح الطبيب بمشاركته: الخطة، ملخصات الجلسات، الوصفات، الصور والمواعيد.</p>
+        <ul>
+          <li data-i18n="carePoint1">ملفات مستقلة وآمنة لكل فرد في الأسرة</li>
+          <li data-i18n="carePoint2">طلبات تعديل البيانات تخضع لاعتماد العيادة</li>
+          <li data-i18n="carePoint3">تنزيل موثّق للملفات بعد تحقق إضافي</li>
+        </ul>
+        <a class="button button-primary account-link" href="login.html" data-i18n="enterCare">ادخل إلى ORAVENA Care</a>
+      </div>
+      <div class="care-preview" aria-label="معاينة حساب المريض">
+        <div class="preview-top"><img src="assets/oravena-icon-new.png" alt=""><span>ORAVENA CARE</span><b>•••</b></div>
+        <div class="preview-welcome"><small data-i18n="welcomeBack">أهلًا بعودتك</small><strong data-i18n="previewName">سارة محمد</strong></div>
+        <div class="preview-appointment">
+          <span class="date-block"><b>08</b><small>SEP</small></span>
+          <div><small data-i18n="nextAppointment">موعدك القادم</small><strong data-i18n="appointmentType">متابعة خطة العلاج</strong><span>15:30 · ORAVENA</span></div>
+        </div>
+        <div class="preview-grid">
+          <div><span>6</span><small data-i18n="sessions">الجلسات</small></div>
+          <div><span>72%</span><small data-i18n="planProgress">تقدم الخطة</small></div>
+          <div><span>3</span><small data-i18n="documents">الملفات</small></div>
+        </div>
+        <div class="preview-plan"><div><small data-i18n="activePlan">الخطة النشطة</small><strong data-i18n="planName">علاج وترميم</strong></div><span>72%</span></div>
+        <div class="progress"><i></i></div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <p class="eyebrow dark" data-i18n="ctaEyebrow">خطوتك الأولى</p>
+      <h2 data-i18n="ctaTitle">خلّينا نبدأ بفهم حالتك</h2>
+      <p data-i18n="ctaCopy">أرسل طلب موعد، وسيتواصل فريق الاستقبال لتأكيد الوقت المناسب.</p>
+      <button class="button button-primary" data-open="bookingDialog" type="button" data-i18n="requestAppointment">اطلب موعدًا</button>
+    </section>
+  </main>
+
+  <footer>
+    <img src="assets/oravena-logo-new.png" alt="ORAVENA">
+    <p data-i18n="footerText">رعاية أسنان حديثة بتجربة واضحة وآمنة.</p>
+    <div><a href="#services" data-i18n="navServices">الخدمات</a><a href="about.html" data-i18n="navAbout">من نحن</a><button data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button></div>
+    <small>© 2026 ORAVENA</small>
+  </footer>
+
+  <dialog id="bookingDialog" class="modal">
+    <form id="bookingForm" method="dialog">
+      <button class="modal-close" value="cancel" aria-label="إغلاق">×</button>
+      <p class="eyebrow dark" data-i18n="bookingEyebrow">طلب موعد</p>
+      <h2 data-i18n="bookingTitle">ابدأ بخطوة بسيطة</h2>
+      <p class="modal-copy" data-i18n="bookingCopy">أرسل البيانات الأساسية وسيتواصل معك الاستقبال لتأكيد الموعد.</p>
+      <label><span data-i18n="fullName">الاسم الكامل</span><input name="name" autocomplete="name" required></label>
+      <label><span data-i18n="email">البريد الإلكتروني</span><input name="email" type="email" autocomplete="email" required></label>
+      <label><span data-i18n="phone">رقم الهاتف</span><input name="phone" type="tel" autocomplete="tel" required></label>
+      <label><span data-i18n="nationalId">رقم الهوية (اختياري)</span><input name="nationalId" inputmode="numeric"></label>
+      <label><span data-i18n="age">السن</span><input name="age" type="number" min="0" max="120" required></label>
+      <label><span data-i18n="service">الخدمة المطلوبة</span><textarea name="service" rows="3" placeholder="اكتب الخدمة أو سبب الزيارة" required></textarea></label>
+      <button class="button button-primary full" type="submit" data-i18n="sendRequest">إرسال الطلب</button>
+      <p class="form-status" id="bookingStatus" role="status"></p>
+    </form>
+  </dialog>
+
+  <script src="supabase-config.js?v=9"></script>
+  <script src="supabase-client.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+</body>
+</html>

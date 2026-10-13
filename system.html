@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d5963">
+  <title>ORAVENA</title>
+  <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
+  <link rel="stylesheet" href="dashboard.css?v=13">
+  <link rel="stylesheet" href="editorial.css?v=12">
+</head>
+<body>
+  <aside class="side" id="side">
+    <a class="side-brand" href="index.html"><img src="assets/oravena-logo-new.png" alt="ORAVENA"></a>
+    <div class="mode-tag">ORAVENA PRO</div>
+    <nav id="sideNav" aria-label="أقسام النظام"></nav>
+    <div class="side-foot"><button id="exportButton" type="button">تصدير نسخة احتياطية</button><a href="index.html">العودة للموقع</a></div>
+  </aside>
+  <button class="side-backdrop" id="sideBackdrop" type="button" aria-label="إغلاق القائمة" hidden></button>
+  <header class="sys-top">
+    <button class="hamburger" id="sideToggle" type="button" aria-label="فتح القائمة">☰</button>
+    <div class="connection" id="connection"><i></i><span>متصل</span></div>
+    <div class="top-actions">
+      <span class="signed-user" id="signedUser"></span>
+      <button id="settingsShortcut" class="secondary" type="button" hidden>⚙ الإعدادات</button>
+      <button id="logoutButton" class="secondary" type="button">تسجيل الخروج</button>
+      <button id="emergencyButton" class="emergency" type="button">الطوارئ</button>
+      <button id="notificationsButton" class="icon-btn" type="button" aria-label="الإشعارات">🔔<b id="notificationCount">0</b></button>
+    </div>
+  </header>
+  <main class="workspace">
+    <div class="page-head">
+      <div><p id="pageKicker">ORAVENA PRO</p><h1 id="pageTitle">لوحة المتابعة</h1></div>
+      <div class="page-tools"><label class="search"><span>⌕</span><input id="globalSearch" type="search" placeholder="ابحث داخل القسم"></label><button id="primaryAction" class="primary" type="button">إضافة جديد</button></div>
+    </div>
+    <section id="content" class="content" aria-live="polite"></section>
+  </main>
+
+  <dialog id="editorDialog" class="dialog"><form id="editorForm"><button class="dialog-close" type="button" data-close="editorDialog">×</button><p class="dialog-kicker">ORAVENA</p><h2 id="editorTitle">إضافة سجل</h2><div id="editorFields" class="form-grid"></div><div class="dialog-actions"><button class="secondary" type="button" data-close="editorDialog">إلغاء</button><button class="primary" type="submit">حفظ</button></div></form></dialog>
+  <dialog id="toothDialog" class="dialog"><form id="toothForm"><button class="dialog-close" type="button" data-close="toothDialog">×</button><p class="dialog-kicker">خريطة الأسنان ثلاثية الأبعاد</p><h2>السن رقم <span id="toothNumber"></span></h2><input id="toothId" type="hidden"><label>الحالة<select id="toothStatus"><option value="healthy">سليم</option><option value="caries">تسوس</option><option value="treated">معالج</option><option value="missing">مفقود</option><option value="implant">زراعة</option><option value="planned">إجراء مخطط</option></select></label><label>مرحلة العلاج<input id="toothStage" placeholder="مثال: تنظيف القنوات"></label><label>ما يحتاجه السن<textarea id="toothNeeds" rows="3"></textarea></label><label>تاريخ العلاج والملاحظات<textarea id="toothNote" rows="4"></textarea></label><div class="dialog-actions"><button class="secondary" type="button" data-close="toothDialog">إلغاء</button><button class="primary" type="submit">حفظ تفاصيل السن</button></div></form></dialog>
+  <dialog id="notificationsDialog" class="dialog small"><div class="dialog-body"><button class="dialog-close" type="button" data-close="notificationsDialog">×</button><p class="dialog-kicker">مركز التنبيهات</p><h2>الإشعارات</h2><div id="notificationsList"></div><button class="secondary full" id="readAllButton" type="button">تحديد الكل كمقروء</button></div></dialog>
+  <dialog id="emergencyDialog" class="dialog small"><div class="dialog-body"><button class="dialog-close" type="button" data-close="emergencyDialog">×</button><p class="dialog-kicker danger">وصول طبي طارئ</p><h2>بطاقة الطوارئ</h2><div id="emergencyContent"></div><button class="primary full" id="recordEmergencyButton" type="button">تسجيل فتح البطاقة</button></div></dialog>
+  <dialog id="invoiceDialog" class="dialog invoice-dialog"><div class="dialog-body"><button class="dialog-close" type="button" data-close="invoiceDialog">×</button><div id="invoiceContent"></div></div></dialog>
+  <dialog id="resetDialog" class="dialog small reset-dialog"><div class="dialog-body"><button class="dialog-close" type="button" data-close="resetDialog">×</button><p class="dialog-kicker danger">إجراء لا يمكن التراجع عنه</p><h2>تصفير بيانات الموقع</h2><p class="muted">سيتم حذف جميع بيانات التشغيل والتجارب، مع الحفاظ على الحسابات والصلاحيات والإعدادات. اكتب <b>تصفير</b> للتأكيد.</p><label>كلمة التأكيد<input id="resetConfirmation" autocomplete="off" placeholder="اكتب: تصفير"></label><p id="resetStatus" class="form-status error" role="alert"></p><div class="dialog-actions"><button class="secondary" type="button" data-close="resetDialog">إلغاء</button><button class="danger-btn strong" id="confirmResetButton" type="button" disabled>تصفير البيانات نهائيًا</button></div></div></dialog>
+  <input id="importInput" type="file" accept="application/json" hidden>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="supabase-config.js?v=12"></script>
+  <script src="supabase-client.js?v=14"></script>
+  <script src="dashboard.js?v=13"></script>
+</body>
+</html>
