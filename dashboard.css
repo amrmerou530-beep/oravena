@@ -53,3 +53,5 @@ html,body,button,input,select,textarea{font-family:system-ui,-apple-system,"Sego
 @media(max-width:620px){.reset-zone{align-items:stretch;flex-direction:column}.reset-zone .danger-btn{width:100%}}
 .side-brand{display:grid;place-items:center;padding-inline:6px}.side-brand img{width:150px!important;height:150px;object-fit:contain;filter:none!important}.invoice-sheet>header>img{width:150px;height:150px;object-fit:contain}.invoice-watermark{object-fit:contain}
 @media(max-width:780px){.side-brand img{width:130px!important;height:130px}}
+.custom-choice{margin-top:.55rem}
+.custom-choice[hidden]{display:none}

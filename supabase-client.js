@@ -36,9 +36,9 @@
   let persistencePromise=null;
   async function ensurePersistence(){
     if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
-      if(!status?.ok||Number(status.version)<20)throw new Error('PERSISTENCE_V20_REQUIRED');
+      if(!status?.ok||Number(status.version)<21)throw new Error('PERSISTENCE_V21_REQUIRED');
       return status;
-    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V20_REQUIRED');throw error});
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V21_REQUIRED');throw error});
     return persistencePromise;
   }
   async function bootstrapAccount(){
@@ -224,6 +224,9 @@
     let settings={},settingsRecordId='';
     records.forEach(record=>{
       if(record.record_type==='tooth'&&record.patient_id){
+        // The API returns newest records first. Keep the first map so an old
+        // duplicate can never replace the patient's latest odontogram.
+        if(toothRecordIds[record.patient_id])return;
         teeth[record.patient_id]=record.payload?.teeth||record.payload||{};
         toothRecordIds[record.patient_id]=record.id;
         return;

@@ -21,7 +21,7 @@ function playHero(src,loop){heroVideo.loop=loop;heroSource.src=src;heroVideo.loa
 if(localStorage.getItem('oravenaHeroSeenFinalV1')){playHero(shortVideo,true)}else{localStorage.setItem('oravenaHeroSeenFinalV1','1');playHero(fullVideo,false)}
 heroVideo.addEventListener('ended',()=>playHero(shortVideo,true));
 const bookingForm=document.getElementById('bookingForm'),bookingStatus=document.getElementById('bookingStatus');
-window.OravenaDB.loadServices().then(services=>{bookingServices=services;renderBookingServices()}).catch(()=>renderBookingServices());
+window.OravenaDB.loadServices().then(services=>{bookingServices=services.filter(service=>service.status==='متاحة');renderBookingServices()}).catch(()=>renderBookingServices());
 bookingForm.addEventListener('submit',async e=>{
   e.preventDefault();
   const button=bookingForm.querySelector('[type="submit"]');
