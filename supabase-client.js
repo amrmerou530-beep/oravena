@@ -33,6 +33,14 @@
     return body;
   }
   const rpcMissing=error=>/function|schema cache|pgrst202|could not find/i.test(error?.message||'');
+  let persistencePromise=null;
+  async function ensurePersistence(){
+    if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
+      if(!status?.ok||Number(status.version)<20)throw new Error('PERSISTENCE_V20_REQUIRED');
+      return status;
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V20_REQUIRED');throw error});
+    return persistencePromise;
+  }
   async function bootstrapAccount(){
     try{return await request('/rest/v1/rpc/oravena_ensure_patient_account',{method:'POST',body:'{}'})}
     catch(error){if(!rpcMissing(error))throw error;return null}
@@ -87,19 +95,18 @@
     [SESSION_KEY,ACCESS_KEY,'oravenaSessionEmail','oravenaSessionRole','oravenaRole'].forEach(k=>localStorage.removeItem(k));
   }
   async function bookAppointment(data){
+    if(session())await ensurePersistence();
     const payload={p_full_name:data.name,p_email:data.email,p_phone:data.phone,p_national_id:data.nationalId||null,p_age:Number(data.age),p_service:data.service};
-    try{return await request('/rest/v1/rpc/create_appointment_request',{method:'POST',body:JSON.stringify(payload)})}
-    catch(error){
-      if(!/function|schema cache|p_email/i.test(error.message))throw error;
-      delete payload.p_email;
-      return request('/rest/v1/rpc/create_appointment_request',{method:'POST',body:JSON.stringify(payload)});
-    }
+    const id=await request('/rest/v1/rpc/create_appointment_request',{method:'POST',body:JSON.stringify(payload)});
+    if(!id)throw new Error('SAVE_NOT_CONFIRMED');
+    return id;
   }
   async function loadServices(){
     const rows=await request('/rest/v1/clinic_services?select=*&active=eq.true&order=sort_order.asc,name_ar.asc',{authenticated:false});
     return (rows||[]).map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||s.name_ar,nameEn:s.name_en||s.name_ar,status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)}));
   }
   async function saveService(data,id=''){
+    await ensurePersistence();
     const body={
       name_ar:String(data.nameAr||'').trim(),
       name_tr:String(data.nameTr||'').trim()||null,
@@ -108,17 +115,21 @@
       sort_order:Number(data.sortOrder||0),
       updated_at:new Date().toISOString()
     };
-    try{return await request('/rest/v1/rpc/oravena_save_service',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
-    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/clinic_services?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
+    const saved=await request('/rest/v1/rpc/oravena_save_service',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})});
+    if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function deleteService(id){
-    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'service',p_id:id})})}
-    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
+    await ensurePersistence();
+    const deleted=await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'service',p_id:id})});
+    if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');
+    return true;
   }
   const appointmentStatusToDb={
     'طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
   };
   async function savePatient(data,id=''){
+    await ensurePersistence();
     const body={
       file_number:String(data.file||'').trim()||undefined,
       full_name:String(data.name||'').trim(),
@@ -137,10 +148,12 @@
       updated_at:new Date().toISOString()
     };
     if(!body.file_number)delete body.file_number;
-    try{return await request('/rest/v1/rpc/oravena_save_patient',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
-    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/patients?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/patients?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
+    const saved=await request('/rest/v1/rpc/oravena_save_patient',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})});
+    if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function saveMyPatient(data){
+    await ensurePersistence();
     const body={
       full_name:String(data.name||'').trim(),
       phone:String(data.phone||'').trim(),
@@ -153,13 +166,18 @@
       current_medications:data.meds||null,
       emergency_contact:data.contact||null
     };
-    return request('/rest/v1/rpc/oravena_save_my_patient',{method:'POST',body:JSON.stringify({p_data:body})});
+    const saved=await request('/rest/v1/rpc/oravena_save_my_patient',{method:'POST',body:JSON.stringify({p_data:body})});
+    if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function deletePatient(id){
-    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'patient',p_id:id})})}
-    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/patients?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
+    await ensurePersistence();
+    const deleted=await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'patient',p_id:id})});
+    if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');
+    return true;
   }
   async function saveAppointment(data,id='',patient={}){
+    await ensurePersistence();
     const body={
       patient_id:data.patientId,
       full_name:patient.name||data.patient||'',
@@ -175,33 +193,31 @@
       change_reason:data.changeReason||null,
       updated_at:new Date().toISOString()
     };
-    try{return await request('/rest/v1/rpc/oravena_save_appointment',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
-    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/appointments?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
+    const saved=await request('/rest/v1/rpc/oravena_save_appointment',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})});
+    if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function deleteAppointment(id){
-    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'appointment',p_id:id})})}
-    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
+    await ensurePersistence();
+    const deleted=await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'appointment',p_id:id})});
+    if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');
+    return true;
   }
   async function markMyNotificationsRead(){
+    await ensurePersistence();
     return request('/rest/v1/rpc/mark_my_notifications_read',{method:'POST',body:'{}'});
+  }
+  async function logEvent(action,details='',patientId=null){
+    await ensurePersistence();
+    return request('/rest/v1/rpc/oravena_log_event',{method:'POST',body:JSON.stringify({p_action:String(action||''),p_details:String(details||''),p_patient_id:patientId||null})});
   }
   async function loadCore(){
     const account=read(ACCESS_KEY);
+    await ensurePersistence();
     if(account?.account_type==='patient')await bootstrapAccount();
-    let patients,appointments,records,staff,services;
-    try{
-      const core=await request('/rest/v1/rpc/oravena_core_data',{method:'POST',body:'{}'});
-      patients=core?.patients||[];appointments=core?.appointments||[];records=core?.records||[];staff=core?.staff||[];services=core?.services||[];
-    }catch(error){
-      if(!rpcMissing(error))throw error;
-      [patients,appointments,records,staff,services]=await Promise.all([
-        request('/rest/v1/patients?select=*&order=created_at.desc'),
-        request('/rest/v1/appointments?select=*&order=created_at.desc'),
-        request('/rest/v1/clinic_records?select=*&order=created_at.desc'),
-        account?.account_type==='admin'?request('/rest/v1/staff_invitations?select=*&order=created_at.desc').catch(()=>[]):Promise.resolve([]),
-        request('/rest/v1/clinic_services?select=*&order=sort_order.asc,name_ar.asc').catch(()=>[])
-      ]);
-    }
+    const core=await request('/rest/v1/rpc/oravena_core_data',{method:'POST',body:'{}'});
+    if(!core||typeof core!=='object')throw new Error('LOAD_NOT_CONFIRMED');
+    const patients=core.patients||[],appointments=core.appointments||[],records=core.records||[],staff=core.staff||[],services=core.services||[];
     const recordMap={session:'sessions',treatment_plan:'plans',prescription:'prescriptions',imaging:'imaging',finance:'finance',inventory:'inventory',lab:'labs',message:'messages',notification:'notifications',audit:'audit'};
     const mapped={sessions:[],plans:[],prescriptions:[],imaging:[],finance:[],inventory:[],labs:[],messages:[],notifications:[],audit:[]};
     const teeth={},toothRecordIds={};
@@ -232,6 +248,7 @@
   }
   const recordTypes={sessions:'session',plans:'treatment_plan',prescriptions:'prescription',imaging:'imaging',finance:'finance',inventory:'inventory',labs:'lab',messages:'message',notifications:'notification',audit:'audit',teeth:'tooth',settings:'setting'};
   async function saveClinicRecord(kind,data,id=''){
+    await ensurePersistence();
     const recordType=recordTypes[kind];
     if(!recordType)throw new Error('UNSUPPORTED_RECORD_TYPE');
     const payload={...data};
@@ -239,13 +256,16 @@
     const financeVisible=recordType==='finance'&&['فاتورة علاج','دفعة','استرداد'].includes(data.type);
     const patientVisible=(['session','treatment_plan','prescription','imaging','message','tooth'].includes(recordType)||financeVisible)&&data.patientVisible!==false;
     const body={record_type:recordType,patient_id:data.patientId||null,payload,patient_visible:patientVisible};
-    try{return await request('/rest/v1/rpc/oravena_save_record',{method:'POST',body:JSON.stringify({p_id:id||null,p_record_type:recordType,p_patient_id:body.patient_id,p_payload:body.payload,p_patient_visible:body.patient_visible})})}
-    catch(error){if(!rpcMissing(error))throw error;if(id){const rows=await request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}&select=*`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}const rows=await request('/rest/v1/clinic_records?select=*',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
+    const saved=await request('/rest/v1/rpc/oravena_save_record',{method:'POST',body:JSON.stringify({p_id:id||null,p_record_type:recordType,p_patient_id:body.patient_id,p_payload:body.payload,p_patient_visible:body.patient_visible})});
+    if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function deleteClinicRecord(kind,id){
     if(!recordTypes[kind])throw new Error('UNSUPPORTED_RECORD_TYPE');
-    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'record',p_id:id})})}
-    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
+    await ensurePersistence();
+    const deleted=await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'record',p_id:id})});
+    if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');
+    return true;
   }
   async function deleteRowsById(table,filter=''){
     while(true){
@@ -259,23 +279,21 @@
     }
   }
   async function resetOperationalData(confirmation){
-    try{
-      return await request('/rest/v1/rpc/reset_oravena_operational_data',{method:'POST',body:JSON.stringify({p_confirmation:confirmation})});
-    }catch(error){
-      if(!/schema cache|could not find the function|pgrst202/i.test(error.message||''))throw error;
-      await deleteRowsById('clinic_records','record_type=neq.setting');
-      await deleteRowsById('appointments');
-      await deleteRowsById('patients');
-      return {ok:true,mode:'admin_direct'};
-    }
+    await ensurePersistence();
+    const result=await request('/rest/v1/rpc/reset_oravena_operational_data',{method:'POST',body:JSON.stringify({p_confirmation:confirmation})});
+    if(!result?.ok)throw new Error('RESET_NOT_CONFIRMED');
+    return result;
   }
   async function saveStaffInvitation(data){
-    return request('/rest/v1/rpc/upsert_staff_invitation',{method:'POST',body:JSON.stringify({
+    await ensurePersistence();
+    const saved=await request('/rest/v1/rpc/upsert_staff_invitation',{method:'POST',body:JSON.stringify({
       p_email:String(data.email||'').trim().toLowerCase(),p_full_name:data.name,
       p_account_type:data.systemRole,p_job_title:data.role||'',p_phone:data.phone||'',
       p_sections:String(data.permissions||'').split(',').filter(Boolean),
       p_permission_templates:String(data.permissionTemplates||'').split(',').filter(Boolean)
     })});
+    if(!saved)throw new Error('SAVE_NOT_CONFIRMED');
+    return saved;
   }
   async function signUpAccount(email,password,fullName,phone=''){
     const data=await request('/auth/v1/signup',{method:'POST',authenticated:false,body:JSON.stringify({email:String(email).trim().toLowerCase(),password,data:{full_name:fullName||'',phone:phone||''}})});
@@ -288,5 +306,5 @@
     }
     return {data,access:null};
   }
-  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
+  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,ensurePersistence,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,logEvent,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
 })();
