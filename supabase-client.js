@@ -29,13 +29,19 @@
       return request(path,options,true);
     }
     const body=response.status===204?null:await response.json().catch(()=>null);
-    if(!response.ok)throw new Error(body?.msg||body?.message||body?.error_description||'REQUEST_FAILED');
+    if(!response.ok){const error=new Error(body?.msg||body?.message||body?.error_description||body?.hint||'REQUEST_FAILED');error.status=response.status;error.code=body?.code||'';throw error}
     return body;
+  }
+  const rpcMissing=error=>/function|schema cache|pgrst202|could not find/i.test(error?.message||'');
+  async function bootstrapAccount(){
+    try{return await request('/rest/v1/rpc/oravena_ensure_patient_account',{method:'POST',body:'{}'})}
+    catch(error){if(!rpcMissing(error))throw error;return null}
   }
   async function signIn(identity,password){
     const field=String(identity).includes('@')?'email':'phone';
     const data=await request('/auth/v1/token?grant_type=password',{method:'POST',authenticated:false,body:JSON.stringify({[field]:String(identity).trim(),password})});
     localStorage.setItem(SESSION_KEY,JSON.stringify(data));
+    await bootstrapAccount();
     const access=await request('/rest/v1/rpc/current_account_access',{method:'POST',body:'{}'});
     if(!access||access.status!=='active')throw new Error('ACCOUNT_NOT_ACTIVE');
     localStorage.setItem(ACCESS_KEY,JSON.stringify(access));
@@ -67,6 +73,7 @@
     };
     localStorage.setItem(SESSION_KEY,JSON.stringify(oauthSession));
     history.replaceState(null,'',location.pathname);
+    await bootstrapAccount();
     const access=await request('/rest/v1/rpc/current_account_access',{method:'POST',body:'{}'});
     if(!access||access.status!=='active'){
       await signOut();
@@ -101,12 +108,12 @@
       sort_order:Number(data.sortOrder||0),
       updated_at:new Date().toISOString()
     };
-    const path=id?`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/clinic_services?select=*';
-    const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
-    return rows?.[0];
+    try{return await request('/rest/v1/rpc/oravena_save_service',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
+    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/clinic_services?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
   }
   async function deleteService(id){
-    return request(`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'service',p_id:id})})}
+    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/clinic_services?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
   }
   const appointmentStatusToDb={
     'طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
@@ -130,12 +137,27 @@
       updated_at:new Date().toISOString()
     };
     if(!body.file_number)delete body.file_number;
-    const path=id?`/rest/v1/patients?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/patients?select=*';
-    const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
-    return rows?.[0];
+    try{return await request('/rest/v1/rpc/oravena_save_patient',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
+    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/patients?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/patients?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
+  }
+  async function saveMyPatient(data){
+    const body={
+      full_name:String(data.name||'').trim(),
+      phone:String(data.phone||'').trim(),
+      national_id:String(data.nationalId||'').trim()||null,
+      age:data.age===''||data.age==null?null:Number(data.age),
+      birth_date:data.birth||null,
+      blood_type:data.blood||null,
+      allergy:data.allergy||null,
+      chronic_conditions:data.chronic||null,
+      current_medications:data.meds||null,
+      emergency_contact:data.contact||null
+    };
+    return request('/rest/v1/rpc/oravena_save_my_patient',{method:'POST',body:JSON.stringify({p_data:body})});
   }
   async function deletePatient(id){
-    return request(`/rest/v1/patients?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'patient',p_id:id})})}
+    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/patients?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
   }
   async function saveAppointment(data,id='',patient={}){
     const body={
@@ -153,25 +175,33 @@
       change_reason:data.changeReason||null,
       updated_at:new Date().toISOString()
     };
-    const path=id?`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/appointments?select=*';
-    const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
-    return rows?.[0];
+    try{return await request('/rest/v1/rpc/oravena_save_appointment',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})})}
+    catch(error){if(!rpcMissing(error))throw error;const path=id?`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=*`:'/rest/v1/appointments?select=*';const rows=await request(path,{method:id?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
   }
   async function deleteAppointment(id){
-    return request(`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'appointment',p_id:id})})}
+    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
   }
   async function markMyNotificationsRead(){
     return request('/rest/v1/rpc/mark_my_notifications_read',{method:'POST',body:'{}'});
   }
   async function loadCore(){
     const account=read(ACCESS_KEY);
-    const [patients,appointments,records,staff,services]=await Promise.all([
-      request('/rest/v1/patients?select=*&order=created_at.desc'),
-      request('/rest/v1/appointments?select=*,patients(full_name,file_number)&order=created_at.desc'),
-      request('/rest/v1/clinic_records?select=*&order=created_at.desc'),
-      account?.account_type==='admin'?request('/rest/v1/staff_invitations?select=*&order=created_at.desc'):Promise.resolve([]),
-      request('/rest/v1/clinic_services?select=*&order=sort_order.asc,name_ar.asc').catch(()=>[])
-    ]);
+    if(account?.account_type==='patient')await bootstrapAccount();
+    let patients,appointments,records,staff,services;
+    try{
+      const core=await request('/rest/v1/rpc/oravena_core_data',{method:'POST',body:'{}'});
+      patients=core?.patients||[];appointments=core?.appointments||[];records=core?.records||[];staff=core?.staff||[];services=core?.services||[];
+    }catch(error){
+      if(!rpcMissing(error))throw error;
+      [patients,appointments,records,staff,services]=await Promise.all([
+        request('/rest/v1/patients?select=*&order=created_at.desc'),
+        request('/rest/v1/appointments?select=*&order=created_at.desc'),
+        request('/rest/v1/clinic_records?select=*&order=created_at.desc'),
+        account?.account_type==='admin'?request('/rest/v1/staff_invitations?select=*&order=created_at.desc').catch(()=>[]):Promise.resolve([]),
+        request('/rest/v1/clinic_services?select=*&order=sort_order.asc,name_ar.asc').catch(()=>[])
+      ]);
+    }
     const recordMap={session:'sessions',treatment_plan:'plans',prescription:'prescriptions',imaging:'imaging',finance:'finance',inventory:'inventory',lab:'labs',message:'messages',notification:'notifications',audit:'audit'};
     const mapped={sessions:[],plans:[],prescriptions:[],imaging:[],finance:[],inventory:[],labs:[],messages:[],notifications:[],audit:[]};
     const teeth={},toothRecordIds={};
@@ -192,8 +222,8 @@
       mapped[key].push(row);
     });
     return {
-      patients:patients.map(p=>({id:p.id,file:p.file_number,name:p.full_name,email:p.email||'',phone:p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
-      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.patients?.full_name||a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:a.appointment_time||'',doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at})),
+      patients:patients.map(p=>({id:p.id,authUserId:p.auth_user_id||'',file:p.file_number,name:p.full_name,email:p.email||'',phone:/^ACCOUNT-/.test(p.phone||'')?'':p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
+      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:a.appointment_time||'',doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at})),
       ...mapped,
       teeth,toothRecordIds,settings,settingsRecordId,
       services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),
@@ -209,16 +239,13 @@
     const financeVisible=recordType==='finance'&&['فاتورة علاج','دفعة','استرداد'].includes(data.type);
     const patientVisible=(['session','treatment_plan','prescription','imaging','message','tooth'].includes(recordType)||financeVisible)&&data.patientVisible!==false;
     const body={record_type:recordType,patient_id:data.patientId||null,payload,patient_visible:patientVisible};
-    if(id){
-      const rows=await request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}&select=*`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
-      return rows?.[0];
-    }
-    const rows=await request('/rest/v1/clinic_records?select=*',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});
-    return rows?.[0];
+    try{return await request('/rest/v1/rpc/oravena_save_record',{method:'POST',body:JSON.stringify({p_id:id||null,p_record_type:recordType,p_patient_id:body.patient_id,p_payload:body.payload,p_patient_visible:body.patient_visible})})}
+    catch(error){if(!rpcMissing(error))throw error;if(id){const rows=await request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}&select=*`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}const rows=await request('/rest/v1/clinic_records?select=*',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(body)});return rows?.[0]}
   }
   async function deleteClinicRecord(kind,id){
     if(!recordTypes[kind])throw new Error('UNSUPPORTED_RECORD_TYPE');
-    return request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+    try{return await request('/rest/v1/rpc/oravena_delete_entity',{method:'POST',body:JSON.stringify({p_entity:'record',p_id:id})})}
+    catch(error){if(!rpcMissing(error))throw error;return request(`/rest/v1/clinic_records?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}})}
   }
   async function deleteRowsById(table,filter=''){
     while(true){
@@ -254,11 +281,12 @@
     const data=await request('/auth/v1/signup',{method:'POST',authenticated:false,body:JSON.stringify({email:String(email).trim().toLowerCase(),password,data:{full_name:fullName||'',phone:phone||''}})});
     if(data?.access_token){
       localStorage.setItem(SESSION_KEY,JSON.stringify(data));
+      await bootstrapAccount();
       const access=await request('/rest/v1/rpc/current_account_access',{method:'POST',body:'{}'});
       if(access?.status==='active')localStorage.setItem(ACCESS_KEY,JSON.stringify(access));
       return {data,access};
     }
     return {data,access:null};
   }
-  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
+  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
 })();
