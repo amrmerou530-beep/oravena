@@ -31,7 +31,7 @@ bookingForm.addEventListener('submit',async e=>{
     await window.OravenaDB.bookAppointment(data);
     bookingStatus.textContent=current==='ar'?'تم حفظ طلبك وفتح ملف مريض مبدئي بنجاح. سيتواصل معك الاستقبال للتأكيد.':current==='tr'?'Talebiniz ve ilk hasta kaydınız oluşturuldu.':'Your request and initial patient record were saved.';
     bookingForm.reset();setTimeout(()=>document.getElementById('bookingDialog').close(),2400);
-  }catch(error){bookingStatus.classList.add('error');bookingStatus.textContent='تعذر إرسال الطلب الآن. راجع البيانات وحاول مرة أخرى.'}
+  }catch(error){bookingStatus.classList.add('error');bookingStatus.textContent=window.OravenaDB.userMessage(error)}
   finally{button.disabled=false}
 });
 function updateAccountNavigation(){

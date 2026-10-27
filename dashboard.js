@@ -22,7 +22,7 @@ function loadDb(){return initialState()}
 const accountAccess=window.OravenaDB?.access();
 if(window.OravenaDB?.configured()&&(!accountAccess||!window.OravenaDB?.session()))location.replace('login.html');
 const sessionEmail=accountAccess?.email||'',primaryAdminEmail=window.ORAVENA_SUPABASE?.primaryAdminEmail||'',isPrimaryAdmin=sessionEmail&&sessionEmail.toLowerCase()===primaryAdminEmail.toLowerCase();
-let db=loadDb(),role=isPrimaryAdmin?'admin':accountAccess?.account_type||'patient',section='dashboard',editing=null,filter='',selectedPatientId=localStorage.getItem('oravenaPatientId')||'',remoteReady=false;
+let db=loadDb(),role=isPrimaryAdmin?'admin':accountAccess?.account_type||'patient',section='dashboard',editing=null,filter='',selectedPatientId=localStorage.getItem('oravenaPatientId')||'',remoteReady=false,loadSequence=0,appliedSequence=0;
 const save=()=>{},currentUser=()=>db.staff.find(u=>u.email.toLowerCase()===sessionEmail.toLowerCase()),currentUserName=()=>accountAccess?.full_name||currentUser()?.name||({admin:'المدير الرئيسي',doctor:'الدكتور',employee:'الموظف',patient:'المريض'})[role];
 const log=(action,details='',patientId=null)=>window.OravenaDB?.configured()?window.OravenaDB.logEvent(action,details,patientId).catch(console.error):Promise.resolve(null);
 function allowedSections(){if(role==='admin')return allSections;if(role==='patient')return ['dashboard','account','appointments','sessions','odontogram','plans','prescriptions','imaging','finance','messages'];if(Array.isArray(accountAccess?.sections)&&accountAccess.sections.length)return accountAccess.sections;return role==='doctor'?permissionTemplates['الدكتور']:permissionTemplates['الاستقبال']}
@@ -72,8 +72,8 @@ function inputFor([k,l,t,opts,required],v=''){const req=required===false?'':'req
 function openEditor(k,id=null,patientId=''){editing={k,id};const d=defs[k],rec=id?db[k].find(x=>x.id===id):patientId?{patientId}:{date:today()};$('#editorTitle').textContent=(id?'تعديل ':'إضافة ')+sectionLabels[k];$('#editorFields').innerHTML=d.fields.map(f=>inputFor(f,rec?.[f[0]])).join('');document.querySelectorAll('[data-template]').forEach(box=>box.onchange=()=>{if(box.checked)box.dataset.template.split(',').forEach(v=>{const c=document.querySelector(`input[name="permissions"][value="${v}"]`);if(c)c.checked=true})});document.querySelectorAll('[data-custom-select]').forEach(select=>select.onchange=()=>{const input=document.querySelector(`[data-custom-input="${select.dataset.customSelect}"]`),custom=select.value==='__custom__';input.hidden=!custom;input.required=custom;if(custom)input.focus()});$('#editorDialog').showModal()}
 async function formDataWithFiles(form){const data={};for(const el of form.elements){if(!el.name||el.name.endsWith('Custom'))continue;if(el.name==='permissions'){data.permissions=Array.from(form.querySelectorAll('[name="permissions"]:checked')).map(x=>x.value).join(',');continue}if(el.name==='permissionTemplates'){data.permissionTemplates=Array.from(form.querySelectorAll('[name="permissionTemplates"]:checked')).map(x=>x.value).join(',');continue}if(el.type==='file'){const file=el.files[0];if(file){data.fileName=file.name;data.fileData=await new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(file)})}continue}data[el.name]=el.value==='__custom__'?(form.elements[`${el.name}Custom`]?.value.trim()||'غير محدد'):el.value}return data}
 function applyCore(core){const settings={...initialState().settings,...(core.settings||{})};db=Object.assign(initialState(),core,{settings});remoteReady=true}
-async function reloadRemote(){const core=await window.OravenaDB.loadCore();applyCore(core)}
-async function saveMyAccount(event){event.preventDefault();const button=event.currentTarget.querySelector('button[type="submit"]'),data=await formDataWithFiles(event.currentTarget);button.disabled=true;button.textContent='جارٍ الحفظ…';try{const saved=await window.OravenaDB.saveMyPatient(data);await reloadRemote();if(!db.patients.some(p=>p.id===saved.id))throw new Error('SAVE_NOT_VISIBLE');selectedPatientId=db.patients.find(p=>p.authUserId===accountAccess?.user_id)?.id||db.patients[0]?.id||'';render();toast('تم حفظ بيانات حسابك وتأكيدها من الخادم')}catch(error){console.error(error);button.disabled=false;button.textContent='حفظ بيانات حسابي';toast('تعذر حفظ بيانات الحساب: '+(error.message||'خطأ غير معروف'),7000)}}
+async function reloadRemote(){const sequence=++loadSequence,core=await window.OravenaDB.loadCore();if(sequence<appliedSequence)return false;appliedSequence=sequence;applyCore(core);return true}
+async function saveMyAccount(event){event.preventDefault();const button=event.currentTarget.querySelector('button[type="submit"]'),data=await formDataWithFiles(event.currentTarget);button.disabled=true;button.textContent='جارٍ الحفظ…';try{const saved=await window.OravenaDB.saveMyPatient(data);await reloadRemote();if(!db.patients.some(p=>p.id===saved.id))throw new Error('SAVE_NOT_VISIBLE');selectedPatientId=db.patients.find(p=>p.authUserId===accountAccess?.user_id)?.id||db.patients[0]?.id||'';render();toast('تم حفظ بيانات حسابك وتأكيدها من الخادم')}catch(error){console.error(error);button.disabled=false;button.textContent='حفظ بيانات حسابي';toast('تعذر حفظ بيانات الحساب: '+window.OravenaDB.userMessage(error),7000)}}
 async function saveSettingsRemote(){const nextSettings={...db.settings};document.querySelectorAll('[data-setting]').forEach(i=>nextSettings[i.dataset.setting]=i.value);if(!window.OravenaDB?.configured())return toast('قاعدة البيانات غير متصلة — لم يتم الحفظ',7000);try{const saved=await window.OravenaDB.saveClinicRecord('settings',nextSettings,db.settingsRecordId);await reloadRemote();if(!db.settingsRecordId||db.settingsRecordId!==saved.id)throw new Error('SAVE_NOT_VISIBLE');log('تحديث الإعدادات');render();toast('تم حفظ الإعدادات وتأكيدها من قاعدة البيانات')}catch(error){console.error(error);toast('تعذر حفظ الإعدادات: '+(error.message||'خطأ غير معروف'),7000)}}
 $('#editorForm').onsubmit=async e=>{
   e.preventDefault();
@@ -93,13 +93,12 @@ $('#editorForm').onsubmit=async e=>{
     }else if(k==='patients'){
       saved=await window.OravenaDB.savePatient(data,id);
       await reloadRemote();
-      if(!db.patients.some(x=>x.id===saved.id))throw new Error('SAVE_NOT_VISIBLE');
+      const confirmed=db.patients.find(x=>x.id===saved.id);if(!confirmed||confirmed.name!==data.name||confirmed.phone!==data.phone||confirmed.email!==(data.email||''))throw new Error('SAVE_NOT_VISIBLE');
     }else if(k==='appointments'){
       const patient=patientById(data.patientId)||{};
       saved=await window.OravenaDB.saveAppointment(data,id,patient);
-      if(id)await window.OravenaDB.saveClinicRecord('notifications',{title:'تم تعديل الموعد',text:`${data.patient}: ${data.date||'موعد غير محدد'} ${data.time||''}${data.changeReason?' — السبب: '+data.changeReason:''}`,patientId:data.patientId,read:false,patientVisible:true});
       await reloadRemote();
-      if(!db.appointments.some(x=>x.id===saved.id))throw new Error('SAVE_NOT_VISIBLE');
+      const confirmed=db.appointments.find(x=>x.id===saved.id);if(!confirmed||confirmed.patientId!==data.patientId||confirmed.status!==(data.status==='غير محدد'?'طلب جديد':data.status)||confirmed.date!==(data.date||'')||confirmed.time!==String(data.time||'').slice(0,5))throw new Error('SAVE_NOT_VISIBLE');
     }else if(remoteKinds.has(k)){
       saved=await window.OravenaDB.saveClinicRecord(k,{...old,...data},id);
       await reloadRemote();
@@ -111,7 +110,7 @@ $('#editorForm').onsubmit=async e=>{
     toast(k==='plans'&&data.status==='مكتملة'?'تم إكمال الخطة وحفظها على الخادم':'تم الحفظ وتأكيد السجل من قاعدة البيانات');
   }catch(error){
     console.error(error);
-    toast('لم يتم الحفظ: '+(error.message||'خطأ غير معروف'),7000);
+    toast('لم يتم الحفظ: '+window.OravenaDB.userMessage(error),7000);
   }
 };
 async function remove(k,id){
@@ -158,10 +157,10 @@ $('#toothForm').onsubmit=async e=>{
   try{
     const saved=await window.OravenaDB.saveClinicRecord('teeth',{patientId:patient.id,teeth:patientTeeth,patientVisible:true},db.toothRecordIds[patient.id]||'');
     await reloadRemote();
-    if(db.toothRecordIds[patient.id]!==saved.id)throw new Error('SAVE_NOT_VISIBLE');
+    const confirmed=db.teeth[patient.id]?.[number];if(db.toothRecordIds[patient.id]!==saved.id||!confirmed||confirmed.status!==patientTeeth[number].status||confirmed.stage!==patientTeeth[number].stage||confirmed.needs!==patientTeeth[number].needs||confirmed.note!==patientTeeth[number].note)throw new Error('SAVE_NOT_VISIBLE');
     log('تحديث خريطة الأسنان',`${patient.name} — السن ${number}`);
     $('#toothDialog').close();render();toast('تم حفظ تفاصيل السن وتأكيدها من قاعدة البيانات');
-  }catch(error){console.error(error);toast('تعذر حفظ خريطة الأسنان: '+(error.message||'خطأ غير معروف'),7000)}
+  }catch(error){console.error(error);toast('تعذر حفظ خريطة الأسنان: '+window.OravenaDB.userMessage(error),7000)}
 };
 function previewImage(id){const r=db.imaging.find(x=>x.id===id);if(!r?.fileData)return toast('لا يوجد ملف معاينة');const w=open('','_blank');w.document.write(r.fileData.startsWith('data:application/pdf')?`<iframe src="${r.fileData}" style="width:100%;height:100vh;border:0"></iframe>`:`<img src="${r.fileData}" style="max-width:100%;display:block;margin:auto">`)}
 function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.download=name;a.click();URL.revokeObjectURL(a.href)}function exportData(){log('تصدير نسخة احتياطية','JSON');download('oravena-local-backup.json',JSON.stringify(db,null,2));toast('تم تصدير النسخة')}
@@ -180,13 +179,12 @@ function toast(s,duration=2600){$('#toast').textContent=s;$('#toast').classList.
 async function handleLoadError(error){
   console.error(error);
   if(error?.status===401||/session|jwt|token|auth_required/i.test(error?.message||'')){await window.OravenaDB.signOut();location.replace('login.html?expired=1');return}
-  const message=/PERSISTENCE_V21_REQUIRED/i.test(error?.message||'')?'شغّل ملف ORAVENA-TOOTH-APPOINTMENTS-SERVICES-V21.sql في Supabase أولًا.':'خطأ قاعدة البيانات: '+(error?.message||'تعذر الاتصال');
+  const message=/PERSISTENCE_V22_REQUIRED/i.test(error?.message||'')?'شغّل ملف ORAVENA-DATA-SYNC-REPAIR-V22.sql في Supabase أولًا.':'خطأ قاعدة البيانات: '+window.OravenaDB.userMessage(error);
   toast(message,10000);
 }
 document.body.dataset.role=role;render();
 if(window.OravenaDB?.configured()&&accountAccess){
-  window.OravenaDB.loadCore().then(core=>{
-    applyCore(core);
+  reloadRemote().then(()=>{
     const ownPatient=db.patients.find(p=>p.authUserId===accountAccess?.user_id);
     selectedPatientId=(role==='patient'?ownPatient?.id:selectedPatientId)||db.patients[0]?.id||'';
     if(selectedPatientId)localStorage.setItem('oravenaPatientId',selectedPatientId);
@@ -197,7 +195,7 @@ let backgroundRefresh=false;
 async function refreshVisibleData(){
   if(backgroundRefresh||document.hidden||!remoteReady||document.querySelector('dialog[open]'))return;
   backgroundRefresh=true;
-  try{await reloadRemote();render()}catch(error){if(error?.status===401)handleLoadError(error)}finally{backgroundRefresh=false}
+  try{const applied=await reloadRemote();if(applied)render()}catch(error){console.error(error);if(error?.status===401)handleLoadError(error);else toast('تعذر تحديث البيانات: '+window.OravenaDB.userMessage(error),5000)}finally{backgroundRefresh=false}
 }
 addEventListener('focus',refreshVisibleData);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVisibleData()});

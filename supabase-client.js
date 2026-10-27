@@ -23,7 +23,7 @@
   }
   async function request(path,options={},retried=false){
     if(!configured())throw new Error('SUPABASE_NOT_CONFIGURED');
-    const response=await fetch(config().url.replace(/\/$/,'')+path,{...options,headers:{...headers(options.authenticated!==false),...(options.headers||{})}});
+    const response=await fetch(config().url.replace(/\/$/,'')+path,{...options,cache:'no-store',headers:{...headers(options.authenticated!==false),'Cache-Control':'no-cache',...(options.headers||{})}});
     if(response.status===401&&options.authenticated!==false&&!retried&&session()?.refresh_token){
       await refreshSession();
       return request(path,options,true);
@@ -36,9 +36,9 @@
   let persistencePromise=null;
   async function ensurePersistence(){
     if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
-      if(!status?.ok||Number(status.version)<21)throw new Error('PERSISTENCE_V21_REQUIRED');
+      if(!status?.ok||Number(status.version)<22)throw new Error('PERSISTENCE_V22_REQUIRED');
       return status;
-    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V21_REQUIRED');throw error});
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V22_REQUIRED');throw error});
     return persistencePromise;
   }
   async function bootstrapAccount(){
@@ -128,6 +128,7 @@
   const appointmentStatusToDb={
     'طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
   };
+  const sameNullable=(left,right)=>String(left??'')===String(right??'');
   async function savePatient(data,id=''){
     await ensurePersistence();
     const body={
@@ -150,6 +151,7 @@
     if(!body.file_number)delete body.file_number;
     const saved=await request('/rest/v1/rpc/oravena_save_patient',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})});
     if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    if(saved.full_name!==body.full_name||saved.phone!==body.phone||!sameNullable(saved.email,body.email))throw new Error('SAVE_VERIFICATION_FAILED');
     return saved;
   }
   async function saveMyPatient(data){
@@ -168,6 +170,7 @@
     };
     const saved=await request('/rest/v1/rpc/oravena_save_my_patient',{method:'POST',body:JSON.stringify({p_data:body})});
     if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    if(saved.full_name!==body.full_name||saved.phone!==body.phone||!sameNullable(saved.national_id,body.national_id)||!sameNullable(saved.birth_date,body.birth_date)||!sameNullable(saved.blood_type,body.blood_type))throw new Error('SAVE_VERIFICATION_FAILED');
     return saved;
   }
   async function deletePatient(id){
@@ -195,6 +198,7 @@
     };
     const saved=await request('/rest/v1/rpc/oravena_save_appointment',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:body})});
     if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    if(saved.patient_id!==body.patient_id||saved.status!==body.status||!sameNullable(saved.appointment_date,body.appointment_date)||!sameNullable(String(saved.appointment_time||'').slice(0,5),String(body.appointment_time||'').slice(0,5)))throw new Error('SAVE_VERIFICATION_FAILED');
     return saved;
   }
   async function deleteAppointment(id){
@@ -242,11 +246,12 @@
     });
     return {
       patients:patients.map(p=>({id:p.id,authUserId:p.auth_user_id||'',file:p.file_number,name:p.full_name,email:p.email||'',phone:/^ACCOUNT-/.test(p.phone||'')?'':p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
-      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:a.appointment_time||'',doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at})),
+      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:String(a.appointment_time||'').slice(0,5),doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at,updatedAt:a.updated_at})),
       ...mapped,
       teeth,toothRecordIds,settings,settingsRecordId,
       services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),
-      staff:staff.map(s=>({id:s.id,name:s.full_name,email:s.email,systemRole:s.account_type,role:s.job_title||'',phone:s.phone||'',shift:'',status:({pending:'بانتظار التفعيل',activated:'نشط',suspended:'موقوف'})[s.status]||s.status,permissions:(s.sections||[]).join(','),permissionTemplates:(s.permission_templates||[]).join(',')}))
+      staff:staff.map(s=>({id:s.id,name:s.full_name,email:s.email,systemRole:s.account_type,role:s.job_title||'',phone:s.phone||'',shift:'',status:({pending:'بانتظار التفعيل',activated:'نشط',suspended:'موقوف'})[s.status]||s.status,permissions:(s.sections||[]).join(','),permissionTemplates:(s.permission_templates||[]).join(',')})),
+      serverMeta:core.meta||{}
     };
   }
   const recordTypes={sessions:'session',plans:'treatment_plan',prescriptions:'prescription',imaging:'imaging',finance:'finance',inventory:'inventory',labs:'lab',messages:'message',notifications:'notification',audit:'audit',teeth:'tooth',settings:'setting'};
@@ -261,6 +266,7 @@
     const body={record_type:recordType,patient_id:data.patientId||null,payload,patient_visible:patientVisible};
     const saved=await request('/rest/v1/rpc/oravena_save_record',{method:'POST',body:JSON.stringify({p_id:id||null,p_record_type:recordType,p_patient_id:body.patient_id,p_payload:body.payload,p_patient_visible:body.patient_visible})});
     if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
+    if(saved.record_type!==recordType||!sameNullable(saved.patient_id,body.patient_id))throw new Error('SAVE_VERIFICATION_FAILED');
     return saved;
   }
   async function deleteClinicRecord(kind,id){
@@ -309,5 +315,14 @@
     }
     return {data,access:null};
   }
-  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,ensurePersistence,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,logEvent,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount};
+  function userMessage(error){
+    const message=String(error?.message||'');
+    if(/SAVE_VERIFICATION_FAILED|SAVE_NOT_CONFIRMED|SAVE_NOT_VISIBLE/.test(message))return 'الخادم لم يؤكد حفظ كل التعديلات. لم نعرض رسالة نجاح.';
+    if(/PERMISSION_DENIED|42501|permission denied/i.test(message))return 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
+    if(/SERVICE_NOT_AVAILABLE/.test(message))return 'الخدمة المختارة لم تعد متاحة.';
+    if(/SESSION_EXPIRED|jwt|token/i.test(message))return 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى.';
+    if(/network|fetch/i.test(message))return 'تعذر الاتصال بقاعدة البيانات. تحقق من الإنترنت وحاول مجددًا.';
+    return message||'حدث خطأ غير معروف.';
+  }
+  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,ensurePersistence,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,logEvent,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount,userMessage};
 })();
