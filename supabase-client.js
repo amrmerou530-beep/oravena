@@ -317,6 +317,10 @@
   }
   function userMessage(error){
     const message=String(error?.message||'');
+    if(/invalid login credentials/i.test(message))return 'البريد أو كلمة المرور غير صحيحة.';
+    if(/email not confirmed/i.test(message))return 'افتح رسالة تأكيد البريد الإلكتروني أولًا، ثم حاول مرة أخرى.';
+    if(/already registered|user already exists/i.test(message))return 'هذا البريد مسجل بالفعل.';
+    if(/PERSISTENCE_V22_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف إصلاح V22 مرة واحدة.';
     if(/SAVE_VERIFICATION_FAILED|SAVE_NOT_CONFIRMED|SAVE_NOT_VISIBLE/.test(message))return 'الخادم لم يؤكد حفظ كل التعديلات. لم نعرض رسالة نجاح.';
     if(/PERMISSION_DENIED|42501|permission denied/i.test(message))return 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
     if(/SERVICE_NOT_AVAILABLE/.test(message))return 'الخدمة المختارة لم تعد متاحة.';

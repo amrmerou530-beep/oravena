@@ -1,0 +1,17 @@
+ORAVENA V24 — Logo Intro Update
+================================
+
+This update adds the new Orevana logo intro without changing Supabase data,
+authentication, permissions, or the V22 data-sync repair.
+
+Behavior:
+- Desktop uses assets/oravena-intro-desktop.mp4.
+- Phones use assets/oravena-intro-mobile.mp4.
+- The first visit must play the full intro.
+- The watched flag is stored only after the video ends.
+- On later visits, a Skip button is available.
+- If autoplay is blocked, a Play Intro button appears; there is no skip on the first visit.
+
+Deployment:
+Upload every file and folder in this package to the repository root.
+Do not run any new SQL file for this visual update.

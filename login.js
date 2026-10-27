@@ -19,14 +19,14 @@ document.getElementById('signInForm').addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget,data=new FormData(form),button=form.querySelector('[type=submit]');
   status.textContent=current==='ar'?'جارٍ تسجيل الدخول…':current==='tr'?'Giriş yapılıyor…':'Signing in…';status.classList.remove('error');button.disabled=true;
   try{await window.OravenaDB.signIn(data.get('identity'),data.get('password'));location.replace('system.html')}
-  catch{await window.OravenaDB.signOut().catch(()=>{});status.classList.add('error');status.textContent=current==='ar'?'بيانات الدخول غير صحيحة أو الحساب موقوف.':current==='tr'?'Bilgiler yanlış veya hesap askıya alınmış.':'Incorrect details or the account is suspended.';button.disabled=false}
+  catch(error){await window.OravenaDB.signOut().catch(()=>{});status.classList.add('error');status.textContent=current==='ar'?'تعذر تسجيل الدخول: '+window.OravenaDB.userMessage(error):current==='tr'?'Bilgiler yanlış, oturum süresi dolmuş veya hesap askıya alınmış.':'The details are incorrect, the session expired, or the account is suspended.';button.disabled=false}
 });
 
 document.getElementById('signUpForm').addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget,data=new FormData(form),button=form.querySelector('[type=submit]');
   status.textContent=current==='ar'?'جارٍ إنشاء الحساب…':current==='tr'?'Hesap oluşturuluyor…':'Creating your account…';status.classList.remove('error');button.disabled=true;
   try{const result=await window.OravenaDB.signUpAccount(data.get('email'),data.get('password'),data.get('fullName'),data.get('phone'));if(result.access){location.replace('system.html');return}status.textContent=current==='ar'?'تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول.':current==='tr'?'Hesap oluşturuldu. E-postanızdaki onay bağlantısını açın.':'Account created. Open the confirmation link in your email.';form.reset()}
-  catch{status.classList.add('error');status.textContent=current==='ar'?'تعذر إنشاء الحساب. قد يكون البريد مستخدمًا بالفعل.':current==='tr'?'Hesap oluşturulamadı. E-posta zaten kullanılıyor olabilir.':'Could not create the account. The email may already be in use.'}
+  catch(error){status.classList.add('error');status.textContent=current==='ar'?'تعذر إنشاء الحساب: '+window.OravenaDB.userMessage(error):current==='tr'?'Hesap oluşturulamadı. E-posta zaten kullanılıyor olabilir.':'Could not create the account. The email may already be in use.'}
   finally{button.disabled=false}
 });
 

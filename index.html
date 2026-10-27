@@ -7,11 +7,17 @@
   <meta name="description" content="ORAVENA — رعاية أسنان حديثة، حجز مواعيد واضح، ومتابعة علاجية رقمية آمنة.">
   <title>ORAVENA</title>
   <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=24">
   <link rel="stylesheet" href="story.css?v=9">
   <link rel="stylesheet" href="cinematic.css?v=11">
 </head>
 <body class="cinematic-home">
+  <section class="site-intro" id="siteIntro" aria-label="ORAVENA" aria-live="polite">
+    <video id="siteIntroVideo" class="site-intro-video" autoplay muted playsinline preload="auto" aria-label="شعار ORAVENA المتحرك"></video>
+    <button class="site-intro-skip" id="siteIntroSkip" type="button" data-i18n="introSkip" hidden>تخطي</button>
+    <button class="site-intro-start" id="siteIntroStart" type="button" data-i18n="introStart" hidden>تشغيل المقدمة</button>
+    <p class="site-intro-status" id="siteIntroStatus" role="status"></p>
+  </section>
   <a class="skip-link" href="#main">انتقل إلى المحتوى</a>
   <header class="topbar" id="topbar">
     <a class="brand" href="#home" aria-label="ORAVENA - الرئيسية">
@@ -176,8 +182,8 @@
     </form>
   </dialog>
 
-  <script src="supabase-config.js?v=9"></script>
-  <script src="supabase-client.js?v=22"></script>
-  <script src="app.js?v=22"></script>
+  <script src="supabase-config.js?v=23"></script>
+  <script src="supabase-client.js?v=23"></script>
+  <script src="app.js?v=24"></script>
 </body>
 </html>
