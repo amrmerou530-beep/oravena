@@ -12,7 +12,7 @@
   <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/oravena-icon-new.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
   <link rel="stylesheet" href="story.css?v=9">
   <link rel="stylesheet" href="cinematic.css?v=11">
 </head>
@@ -179,15 +179,15 @@
       <label><span data-i18n="fullName">الاسم الكامل</span><input name="name" autocomplete="name" required></label>
       <label><span data-i18n="age">السن</span><input name="age" type="number" min="0" max="120" required></label>
       <div id="bookingServices" class="booking-services"><label><span data-i18n="service">الخدمة المطلوبة</span><select id="bookingService" class="booking-service-select" name="service" required><option value="غير محدد">غير محدد</option></select></label></div>
-      <button class="add-request" id="addBookingRequest" type="button">＋ إضافة طلب آخر</button>
+      <button class="add-request" id="addBookingRequest" type="button" hidden>＋ إضافة طلب آخر</button>
       <button class="button button-primary full" type="submit" data-i18n="sendRequest">إرسال الطلب</button>
       <p class="form-status" id="bookingStatus" role="status"></p>
     </form>
   </dialog>
 
   <script src="supabase-config.js?v=23"></script>
-  <script src="supabase-client.js?v=25"></script>
-  <script src="app.js?v=25"></script>
-  <script src="pwa.js?v=25"></script>
+  <script src="supabase-client.js?v=26"></script>
+  <script src="app.js?v=26"></script>
+  <script src="pwa.js?v=26"></script>
 </body>
 </html>
