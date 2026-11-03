@@ -1,6 +1,8 @@
 (function(){
+  if(window.top!==window.self){document.documentElement.innerHTML='';return}
   const SESSION_KEY='oravena_auth_session_v1';
   const ACCESS_KEY='oravena_account_access_v1';
+  const ACTIVITY_KEY='oravena_last_activity_v1';
   const config=()=>window.ORAVENA_SUPABASE||{};
   const configured=()=>/^https:\/\/.+\.supabase\.co\/?$/.test(config().url||'')&&String(config().anonKey||'').length>40;
   const read=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'null')}catch{return null}};
@@ -53,6 +55,7 @@
     const access=await request('/rest/v1/rpc/current_account_access',{method:'POST',body:'{}'});
     if(!access||access.status!=='active')throw new Error('ACCOUNT_NOT_ACTIVE');
     localStorage.setItem(ACCESS_KEY,JSON.stringify(access));
+    localStorage.setItem(ACTIVITY_KEY,String(Date.now()));
     return access;
   }
   function signInWithGoogle(){
@@ -88,11 +91,12 @@
       throw new Error('ACCOUNT_NOT_ACTIVE');
     }
     localStorage.setItem(ACCESS_KEY,JSON.stringify(access));
+    localStorage.setItem(ACTIVITY_KEY,String(Date.now()));
     return access;
   }
   async function signOut(){
     if(configured()&&session())await request('/auth/v1/logout',{method:'POST'}).catch(()=>{});
-    [SESSION_KEY,ACCESS_KEY,'oravenaSessionEmail','oravenaSessionRole','oravenaRole'].forEach(k=>localStorage.removeItem(k));
+    [SESSION_KEY,ACCESS_KEY,ACTIVITY_KEY,'oravenaSessionEmail','oravenaSessionRole','oravenaRole'].forEach(k=>localStorage.removeItem(k));
   }
   async function bookAppointment(data){
     if(session())await ensurePersistence();

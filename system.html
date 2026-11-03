@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; frame-src 'self' data: blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#0d5963">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,7 +22,7 @@
     <a class="side-brand" href="index.html"><img src="assets/oravena-logo-new.png" alt="ORAVENA"></a>
     <div class="mode-tag">ORAVENA PRO</div>
     <nav id="sideNav" aria-label="أقسام النظام"></nav>
-    <div class="side-foot"><button id="exportButton" type="button">تصدير نسخة احتياطية</button><a href="index.html">العودة للموقع</a></div>
+    <div class="side-foot"><button id="exportButton" type="button">تصدير تقرير PDF</button><a href="index.html">العودة للموقع</a></div>
   </aside>
   <button class="side-backdrop" id="sideBackdrop" type="button" aria-label="إغلاق القائمة" hidden></button>
   <header class="sys-top">
@@ -50,8 +54,8 @@
   <input id="importInput" type="file" accept="application/json" hidden>
   <div id="toast" class="toast" role="status"></div>
   <script src="supabase-config.js?v=23"></script>
-  <script src="supabase-client.js?v=26"></script>
-  <script src="dashboard.js?v=26"></script>
+  <script src="supabase-client.js?v=27"></script>
+  <script src="dashboard.js?v=27"></script>
   <script src="pwa.js?v=26"></script>
 </body>
 </html>
