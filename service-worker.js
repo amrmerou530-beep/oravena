@@ -1,4 +1,4 @@
-const CACHE_NAME='oravena-shell-v27';
+const CACHE_NAME='oravena-shell-v28';
 const APP_SHELL=['./','./index.html','./about.html','./styles.css','./login.css','./story.css','./editorial.css','./cinematic.css','./app.js','./about.js','./pwa.js','./manifest.webmanifest','./assets/oravena-icon-new.png','./assets/oravena-logo-new.png','./assets/oravena-adult-odontogram.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.allSettled(APP_SHELL.map(url=>cache.add(url)))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

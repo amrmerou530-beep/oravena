@@ -14,7 +14,7 @@
   <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/oravena-icon-new.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=28">
   <link rel="stylesheet" href="story.css?v=9">
   <link rel="stylesheet" href="cinematic.css?v=11">
 </head>
@@ -180,7 +180,7 @@
       <p class="modal-copy" data-i18n="bookingCopy">أرسل البيانات الأساسية وسيتواصل معك الاستقبال لتأكيد الموعد.</p>
       <label><span data-i18n="fullName">الاسم الكامل</span><input name="name" autocomplete="name" required></label>
       <label><span data-i18n="age">السن</span><input name="age" type="number" min="0" max="120" required></label>
-      <div id="bookingServices" class="booking-services"><label><span data-i18n="service">الخدمة المطلوبة</span><select id="bookingService" class="booking-service-select" name="service" required><option value="غير محدد">غير محدد</option></select></label></div>
+      <div id="bookingServices" class="booking-services"><div class="booking-service-group"><label><span>الخدمة الرئيسية</span><select class="booking-service-parent" required></select></label><label><span>النوع</span><select class="booking-service-child" name="service" required></select></label></div></div>
       <button class="add-request" id="addBookingRequest" type="button" hidden>＋ إضافة طلب آخر</button>
       <button class="button button-primary full" type="submit" data-i18n="sendRequest">إرسال الطلب</button>
       <p class="form-status" id="bookingStatus" role="status"></p>
@@ -188,8 +188,8 @@
   </dialog>
 
   <script src="supabase-config.js?v=23"></script>
-  <script src="supabase-client.js?v=27"></script>
-  <script src="app.js?v=26"></script>
+  <script src="supabase-client.js?v=28"></script>
+  <script src="app.js?v=28"></script>
   <script src="pwa.js?v=26"></script>
 </body>
 </html>

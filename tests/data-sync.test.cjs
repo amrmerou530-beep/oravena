@@ -47,13 +47,14 @@ class MockServer{
       patients:[this.patient],
       appointments:this.appointments.filter(a=>!patient||a.patient_id===this.patient.id),
       records:this.records.filter(r=>!patient||(r.patient_id===this.patient.id&&r.patient_visible)),
-      staff:[],services:[{id:'svc-1',name_ar:'كشف',active:true,sort_order:1}],
-      meta:{version:22,user_id:patient?'patient-user':'doctor-user'}
+      staff:[],services:[{id:'svc-1',name_ar:'كشف',name_en:'Exam',price:500,service_type:'main',parent_service_id:null,active:true,sort_order:1}],
+      meta:{version:28,user_id:patient?'patient-user':'doctor-user'}
     };
   }
   async fetch(token,url,options={}){
     const endpoint=new URL(url).pathname;
-    if(endpoint.endsWith('/oravena_persistence_health'))return response(200,{ok:true,version:22});
+    if(endpoint.endsWith('/oravena_persistence_health'))return response(200,{ok:true,version:28});
+    if(endpoint.endsWith('/doctor_schedule'))return response(200,[]);
     if(endpoint.endsWith('/oravena_ensure_patient_account'))return response(200,this.patient.id);
     if(endpoint.endsWith('/create_appointment_request')){
       const b=this.body(options); const id=`appointment-${++this.counter}`;
@@ -116,12 +117,16 @@ class MockServer{
   assert.equal(afterRefresh.teeth['patient-1'][1].status,'filling','refresh must not lose tooth state');
 
   const sql=fs.readFileSync(path.join(root,'supabase','ORAVENA-DATA-SYNC-REPAIR-V22.sql'),'utf8');
+  const sqlV28=fs.readFileSync(path.join(root,'supabase','ORAVENA-V28-CLINICAL-WORKFLOW.sql'),'utf8');
   assert.match(sql,/begin;[\s\S]*commit;/i,'migration must be transactional');
   assert.match(sql,/r\.payload-'internal'/,'patient payload must remove internal session notes server-side');
   assert.match(sql,/patients_one_file_per_auth_user/,'one patient file per auth account is enforced');
   assert.match(sql,/clinic_records_one_tooth_map_per_patient/,'one active odontogram per patient is enforced');
   assert.match(sql,/revoke insert,update,delete/i,'direct client writes must be blocked');
   assert.doesNotMatch(sql,/delete\s+from\s+public\.(patients|appointments|clinic_records)/i,'migration must not delete operational data');
+  assert.match(sqlV28,/service_type[\s\S]*parent_service_id/i,'hierarchical services must be persisted');
+  assert.match(sqlV28,/oravena_save_session_with_tooth/i,'session and odontogram update must be transactional');
+  assert.match(sqlV28,/account_type='doctor'[\s\S]*services/i,'doctor role must manage services without a separate flag');
 
   console.log('PASS: booking, shared reads, appointment sync, odontogram sync, refresh persistence, permissions, SQL safeguards');
 })().catch(error=>{console.error(error);process.exitCode=1});

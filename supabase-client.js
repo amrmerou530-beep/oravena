@@ -38,9 +38,9 @@
   let persistencePromise=null;
   async function ensurePersistence(){
     if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
-      if(!status?.ok||Number(status.version)<22)throw new Error('PERSISTENCE_V22_REQUIRED');
+      if(!status?.ok||Number(status.version)<28)throw new Error('PERSISTENCE_V28_REQUIRED');
       return status;
-    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V22_REQUIRED');throw error});
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V28_REQUIRED');throw error});
     return persistencePromise;
   }
   async function bootstrapAccount(){
@@ -115,7 +115,7 @@
   }
   async function loadServices(){
     const rows=await request('/rest/v1/clinic_services?select=*&active=eq.true&order=sort_order.asc,name_ar.asc',{authenticated:false});
-    return (rows||[]).map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||s.name_ar,nameEn:s.name_en||s.name_ar,status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)}));
+    return (rows||[]).map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||s.name_ar,nameEn:s.name_en||s.name_ar,price:String(s.price??0),serviceType:s.service_type==='sub'?'فرعية':'رئيسية',parentServiceId:s.parent_service_id||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)}));
   }
   async function saveService(data,id=''){
     await ensurePersistence();
@@ -123,6 +123,9 @@
       name_ar:String(data.nameAr||'').trim(),
       name_tr:String(data.nameTr||'').trim()||null,
       name_en:String(data.nameEn||'').trim()||null,
+      price:Number(data.price||0),
+      service_type:data.serviceType==='فرعية'?'sub':'main',
+      parent_service_id:data.serviceType==='فرعية'?(data.parentServiceId||null):null,
       active:data.status==='متاحة',
       sort_order:Number(data.sortOrder||0),
       updated_at:new Date().toISOString()
@@ -138,7 +141,7 @@
     return true;
   }
   const appointmentStatusToDb={
-    'طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
+    'كشف':'new_request','طلب جديد':'new_request','مؤكد':'confirmed','معدل':'changed','ملغي':'cancelled','مكتمل':'completed'
   };
   const sameNullable=(left,right)=>String(left??'')===String(right??'');
   async function savePatient(data,id=''){
@@ -219,6 +222,17 @@
     if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');
     return true;
   }
+  async function loadSchedule(){
+    await ensurePersistence();
+    const rows=await request('/rest/v1/doctor_schedule?select=*&order=schedule_date.asc,schedule_time.asc');
+    return (rows||[]).map(row=>({id:row.id,doctorUserId:row.doctor_user_id,patientId:row.patient_id||'',patient:row.patient_name,serviceId:row.service_id||'',service:row.service_name||'',date:row.schedule_date,time:String(row.schedule_time||'').slice(0,5),important:Boolean(row.important),status:({scheduled:'مجدول',completed:'مكتمل',cancelled:'ملغي'})[row.status]||row.status,notes:row.notes||'',createdAt:row.created_at,updatedAt:row.updated_at}));
+  }
+  async function saveSchedule(data,id=''){
+    await ensurePersistence();
+    const payload={patient_id:data.patientId||null,patient_name:data.patient||data.patientName||'موعد خاص',service_id:data.serviceId||null,service_name:data.service||null,schedule_date:data.date,schedule_time:data.time,important:Boolean(data.important),status:({مجدول:'scheduled',مكتمل:'completed',ملغي:'cancelled'})[data.status]||'scheduled',notes:data.notes||null};
+    const saved=await request('/rest/v1/rpc/oravena_save_schedule',{method:'POST',body:JSON.stringify({p_id:id||null,p_data:payload})});if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');return saved;
+  }
+  async function deleteSchedule(id){await ensurePersistence();const deleted=await request('/rest/v1/rpc/oravena_delete_schedule',{method:'POST',body:JSON.stringify({p_id:id})});if(deleted!==true)throw new Error('DELETE_NOT_CONFIRMED');return true}
   async function markMyNotificationsRead(){
     await ensurePersistence();
     return request('/rest/v1/rpc/mark_my_notifications_read',{method:'POST',body:'{}'});
@@ -231,7 +245,7 @@
     const account=read(ACCESS_KEY);
     await ensurePersistence();
     if(account?.account_type==='patient')await bootstrapAccount();
-    const core=await request('/rest/v1/rpc/oravena_core_data',{method:'POST',body:'{}'});
+    const [core,schedule]=await Promise.all([request('/rest/v1/rpc/oravena_core_data',{method:'POST',body:'{}'}),account?.account_type==='patient'?Promise.resolve([]):loadSchedule()]);
     if(!core||typeof core!=='object')throw new Error('LOAD_NOT_CONFIRMED');
     const patients=core.patients||[],appointments=core.appointments||[],records=core.records||[],staff=core.staff||[],services=core.services||[];
     const recordMap={session:'sessions',treatment_plan:'plans',prescription:'prescriptions',imaging:'imaging',finance:'finance',inventory:'inventory',lab:'labs',message:'messages',notification:'notifications',audit:'audit'};
@@ -258,10 +272,10 @@
     });
     return {
       patients:patients.map(p=>({id:p.id,authUserId:p.auth_user_id||'',file:p.file_number,name:p.full_name,email:/@oravena\.local$/i.test(p.email||'')?'':p.email||'',phone:/^(ACCOUNT|BOOKING)-/.test(p.phone||'')?'':p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
-      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:/@oravena\.local$/i.test(a.email||'')?'':a.email||'',phone:/^(ACCOUNT|BOOKING)-/.test(a.phone||'')?'':a.phone,service:a.service,date:a.appointment_date||'',time:String(a.appointment_time||'').slice(0,5),doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at,updatedAt:a.updated_at})),
+      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:/@oravena\.local$/i.test(a.email||'')?'':a.email||'',phone:/^(ACCOUNT|BOOKING)-/.test(a.phone||'')?'':a.phone,service:a.service,date:a.appointment_date||'',time:String(a.appointment_time||'').slice(0,5),doctor:a.doctor_name||'غير محدد',status:({new_request:'كشف',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at,updatedAt:a.updated_at})),
       ...mapped,
       teeth,toothRecordIds,settings,settingsRecordId,
-      services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),
+      services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',price:String(s.price??0),serviceType:s.service_type==='sub'?'فرعية':'رئيسية',parentServiceId:s.parent_service_id||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),schedule,
       staff:staff.map(s=>({id:s.id,name:s.full_name,email:s.email,systemRole:s.account_type,role:s.job_title||'',phone:s.phone||'',shift:'',status:({pending:'بانتظار التفعيل',activated:'نشط',suspended:'موقوف'})[s.status]||s.status,permissions:(s.sections||[]).join(','),permissionTemplates:(s.permission_templates||[]).join(',')})),
       serverMeta:core.meta||{}
     };
@@ -280,6 +294,10 @@
     if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');
     if(saved.record_type!==recordType||!sameNullable(saved.patient_id,body.patient_id))throw new Error('SAVE_VERIFICATION_FAILED');
     return saved;
+  }
+  async function saveSessionWithTooth(data,id=''){
+    await ensurePersistence();const payload={...data};delete payload.id;delete payload.patientId;delete payload.patientVisible;delete payload.createdAt;
+    const saved=await request('/rest/v1/rpc/oravena_save_session_with_tooth',{method:'POST',body:JSON.stringify({p_id:id||null,p_patient_id:data.patientId,p_payload:payload,p_patient_visible:data.patientVisible!==false})});if(!saved?.id)throw new Error('SAVE_NOT_CONFIRMED');return saved;
   }
   async function deleteClinicRecord(kind,id){
     if(!recordTypes[kind])throw new Error('UNSUPPORTED_RECORD_TYPE');
@@ -332,7 +350,7 @@
     if(/invalid login credentials/i.test(message))return 'البريد أو كلمة المرور غير صحيحة.';
     if(/email not confirmed/i.test(message))return 'افتح رسالة تأكيد البريد الإلكتروني أولًا، ثم حاول مرة أخرى.';
     if(/already registered|user already exists/i.test(message))return 'هذا البريد مسجل بالفعل.';
-    if(/PERSISTENCE_V22_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف إصلاح V22 مرة واحدة.';
+    if(/PERSISTENCE_V28_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف ORAVENA-V28-CLINICAL-WORKFLOW.sql مرة واحدة.';
     if(/SAVE_VERIFICATION_FAILED|SAVE_NOT_CONFIRMED|SAVE_NOT_VISIBLE/.test(message))return 'الخادم لم يؤكد حفظ كل التعديلات. لم نعرض رسالة نجاح.';
     if(/PERMISSION_DENIED|42501|permission denied/i.test(message))return 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
     if(/SERVICE_NOT_AVAILABLE/.test(message))return 'الخدمة المختارة لم تعد متاحة.';
@@ -340,5 +358,5 @@
     if(/network|fetch/i.test(message))return 'تعذر الاتصال بقاعدة البيانات. تحقق من الإنترنت وحاول مجددًا.';
     return message||'حدث خطأ غير معروف.';
   }
-  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,ensurePersistence,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,markMyNotificationsRead,logEvent,loadCore,saveClinicRecord,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount,userMessage};
+  window.OravenaDB={configured,session,access:()=>read(ACCESS_KEY),request,refreshSession,ensurePersistence,bootstrapAccount,signIn,signInWithGoogle,completeOAuth,signOut,bookAppointment,loadServices,saveService,deleteService,savePatient,saveMyPatient,deletePatient,saveAppointment,deleteAppointment,loadSchedule,saveSchedule,deleteSchedule,markMyNotificationsRead,logEvent,loadCore,saveClinicRecord,saveSessionWithTooth,deleteClinicRecord,resetOperationalData,saveStaffInvitation,signUpAccount,signUpStaff:signUpAccount,userMessage};
 })();
