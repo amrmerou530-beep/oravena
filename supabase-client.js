@@ -96,7 +96,15 @@
   }
   async function bookAppointment(data){
     if(session())await ensurePersistence();
-    const payload={p_full_name:data.name,p_email:data.email,p_phone:data.phone,p_national_id:data.nationalId||null,p_age:Number(data.age),p_service:data.service};
+    const access=read(ACCESS_KEY),token=String(data.bookingToken||Date.now());
+    let email=String(data.email||access?.email||`booking-${token}@oravena.local`).trim().toLowerCase();
+    let phone=String(data.phone||'').trim();
+    if(!phone&&session()&&access?.user_id){
+      const own=await request(`/rest/v1/patients?select=phone&id=not.is.null&auth_user_id=eq.${encodeURIComponent(access.user_id)}&limit=1`).catch(()=>[]);
+      phone=String(own?.[0]?.phone||'').trim();
+    }
+    if(!phone)phone=`BOOKING-${token}`;
+    const payload={p_full_name:data.name,p_email:email,p_phone:phone,p_national_id:null,p_age:Number(data.age),p_service:data.service};
     const id=await request('/rest/v1/rpc/create_appointment_request',{method:'POST',body:JSON.stringify(payload)});
     if(!id)throw new Error('SAVE_NOT_CONFIRMED');
     return id;
@@ -245,8 +253,8 @@
       mapped[key].push(row);
     });
     return {
-      patients:patients.map(p=>({id:p.id,authUserId:p.auth_user_id||'',file:p.file_number,name:p.full_name,email:p.email||'',phone:/^ACCOUNT-/.test(p.phone||'')?'':p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
-      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:a.email||'',phone:a.phone,service:a.service,date:a.appointment_date||'',time:String(a.appointment_time||'').slice(0,5),doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at,updatedAt:a.updated_at})),
+      patients:patients.map(p=>({id:p.id,authUserId:p.auth_user_id||'',file:p.file_number,name:p.full_name,email:/@oravena\.local$/i.test(p.email||'')?'':p.email||'',phone:/^(ACCOUNT|BOOKING)-/.test(p.phone||'')?'':p.phone,nationalId:p.national_id||'',age:p.age??'',birth:p.birth_date||'',blood:p.blood_type||'',allergy:p.allergy||'',chronic:p.chronic_conditions||'',meds:p.current_medications||'',doctorNotes:p.doctor_notes||'',contact:p.emergency_contact||'',balance:String(p.balance??0)})),
+      appointments:appointments.map(a=>({id:a.id,patientId:a.patient_id,patient:a.full_name,email:/@oravena\.local$/i.test(a.email||'')?'':a.email||'',phone:/^(ACCOUNT|BOOKING)-/.test(a.phone||'')?'':a.phone,service:a.service,date:a.appointment_date||'',time:String(a.appointment_time||'').slice(0,5),doctor:a.doctor_name||'غير محدد',status:({new_request:'طلب جديد',confirmed:'مؤكد',changed:'معدل',cancelled:'ملغي',completed:'مكتمل'})[a.status]||a.status,changeReason:a.change_reason||'',createdAt:a.created_at,updatedAt:a.updated_at})),
       ...mapped,
       teeth,toothRecordIds,settings,settingsRecordId,
       services:services.map(s=>({id:s.id,nameAr:s.name_ar,nameTr:s.name_tr||'',nameEn:s.name_en||'',status:s.active?'متاحة':'متوقفة',sortOrder:String(s.sort_order??0)})),

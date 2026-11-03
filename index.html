@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0d5963">
   <meta name="description" content="ORAVENA — رعاية أسنان حديثة، حجز مواعيد واضح، ومتابعة علاجية رقمية آمنة.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ORAVENA">
   <title>ORAVENA</title>
   <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="apple-touch-icon" href="assets/oravena-icon-new.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css?v=25">
   <link rel="stylesheet" href="story.css?v=9">
   <link rel="stylesheet" href="cinematic.css?v=11">
 </head>
@@ -125,7 +130,7 @@
       <div class="care-copy">
         <p class="eyebrow dark">ORAVENA CARE</p>
         <h2 data-i18n="careTitle">علاجك معك،<br>من غير تعقيد</h2>
-        <p data-i18n="careCopy">حساب واحد يجمع ما سمح الطبيب بمشاركته: الخطة، ملخصات الجلسات، الوصفات، الصور والمواعيد.</p>
+        <p data-i18n="careCopy">حساب واحد يجمع ما يخصك: المواعيد، ملخصات الجلسات، خطة العلاج وحساب المريض.</p>
         <ul>
           <li data-i18n="carePoint1">ملفات مستقلة وآمنة لكل فرد في الأسرة</li>
           <li data-i18n="carePoint2">طلبات تعديل البيانات تخضع لاعتماد العيادة</li>
@@ -161,7 +166,7 @@
   <footer>
     <img src="assets/oravena-logo-new.png" alt="ORAVENA">
     <p data-i18n="footerText">رعاية أسنان حديثة بتجربة واضحة وآمنة.</p>
-    <div><a href="#services" data-i18n="navServices">الخدمات</a><a href="about.html" data-i18n="navAbout">من نحن</a><button data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button></div>
+    <div><a href="#services" data-i18n="navServices">الخدمات</a><a href="about.html" data-i18n="navAbout">من نحن</a><button data-open="bookingDialog" type="button" data-i18n="bookNow">احجز موعدًا</button><button data-install-app type="button" hidden>تثبيت التطبيق</button></div>
     <small>© 2026 ORAVENA</small>
   </footer>
 
@@ -172,18 +177,17 @@
       <h2 data-i18n="bookingTitle">ابدأ بخطوة بسيطة</h2>
       <p class="modal-copy" data-i18n="bookingCopy">أرسل البيانات الأساسية وسيتواصل معك الاستقبال لتأكيد الموعد.</p>
       <label><span data-i18n="fullName">الاسم الكامل</span><input name="name" autocomplete="name" required></label>
-      <label><span data-i18n="email">البريد الإلكتروني</span><input name="email" type="email" autocomplete="email" required></label>
-      <label><span data-i18n="phone">رقم الهاتف</span><input name="phone" type="tel" autocomplete="tel" required></label>
-      <label><span data-i18n="nationalId">رقم الهوية (اختياري)</span><input name="nationalId" inputmode="numeric"></label>
       <label><span data-i18n="age">السن</span><input name="age" type="number" min="0" max="120" required></label>
-      <label><span data-i18n="service">الخدمة المطلوبة</span><select id="bookingService" name="service" required><option value="غير محدد">غير محدد</option></select></label>
+      <div id="bookingServices" class="booking-services"><label><span data-i18n="service">الخدمة المطلوبة</span><select id="bookingService" class="booking-service-select" name="service" required><option value="غير محدد">غير محدد</option></select></label></div>
+      <button class="add-request" id="addBookingRequest" type="button">＋ إضافة طلب آخر</button>
       <button class="button button-primary full" type="submit" data-i18n="sendRequest">إرسال الطلب</button>
       <p class="form-status" id="bookingStatus" role="status"></p>
     </form>
   </dialog>
 
   <script src="supabase-config.js?v=23"></script>
-  <script src="supabase-client.js?v=23"></script>
-  <script src="app.js?v=24"></script>
+  <script src="supabase-client.js?v=25"></script>
+  <script src="app.js?v=25"></script>
+  <script src="pwa.js?v=25"></script>
 </body>
 </html>

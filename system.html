@@ -4,9 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0d5963">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>ORAVENA</title>
   <link rel="icon" href="assets/oravena-icon-new.png" type="image/png">
-  <link rel="stylesheet" href="dashboard.css?v=13">
+  <link rel="apple-touch-icon" href="assets/oravena-icon-new.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="dashboard.css?v=25">
   <link rel="stylesheet" href="editorial.css?v=12">
 </head>
 <body>
@@ -23,6 +27,7 @@
     <div class="top-actions">
       <span class="signed-user" id="signedUser"></span>
       <button id="settingsShortcut" class="secondary" type="button" hidden>⚙ الإعدادات</button>
+      <button class="secondary" data-install-app type="button" hidden>تثبيت التطبيق</button>
       <button id="logoutButton" class="secondary" type="button">تسجيل الخروج</button>
       <button id="emergencyButton" class="emergency" type="button">الطوارئ</button>
       <button id="notificationsButton" class="icon-btn" type="button" aria-label="الإشعارات">🔔<b id="notificationCount">0</b></button>
@@ -45,7 +50,8 @@
   <input id="importInput" type="file" accept="application/json" hidden>
   <div id="toast" class="toast" role="status"></div>
   <script src="supabase-config.js?v=23"></script>
-  <script src="supabase-client.js?v=23"></script>
-  <script src="dashboard.js?v=23"></script>
+  <script src="supabase-client.js?v=25"></script>
+  <script src="dashboard.js?v=25"></script>
+  <script src="pwa.js?v=25"></script>
 </body>
 </html>

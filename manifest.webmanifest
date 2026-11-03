@@ -1,0 +1,21 @@
+{
+  "name": "ORAVENA Dental Clinic",
+  "short_name": "ORAVENA",
+  "description": "إدارة مواعيد وملفات مرضى ORAVENA",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f8f8",
+  "theme_color": "#0d5963",
+  "icons": [
+    {
+      "src": "assets/oravena-icon-new.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
