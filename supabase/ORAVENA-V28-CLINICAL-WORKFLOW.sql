@@ -22,7 +22,7 @@ exception when others then
 end $$;
 
 create or replace function public.allowed_section(section_name text) returns boolean language sql stable security definer set search_path=public as $$
- select public.is_admin() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.status='active' and p.account_type='doctor' and section_name=any(array['dashboard','services','appointments','patients','sessions','odontogram','plans','reports']::text[])) or exists(select 1 from public.staff_permissions sp join public.profiles p on p.id=sp.user_id where sp.user_id=auth.uid() and p.status='active' and section_name=any(sp.sections))
+ select public.is_admin() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.status='active' and p.account_type='doctor' and section_name=any(array['dashboard','services','appointments','patients','sessions','odontogram','plans','accounts','reports']::text[])) or exists(select 1 from public.staff_permissions sp join public.profiles p on p.id=sp.user_id where sp.user_id=auth.uid() and p.status='active' and section_name=any(sp.sections))
 $$;
 
 create or replace function public.oravena_save_service(p_id uuid,p_data jsonb) returns jsonb language plpgsql security definer set search_path=public as $$
