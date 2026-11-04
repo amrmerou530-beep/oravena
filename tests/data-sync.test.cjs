@@ -143,6 +143,8 @@ class MockServer{
   assert.match(sqlV32,/primary admin manages profiles/i,'direct account promotion must remain restricted to the primary admin');
   assert.doesNotMatch(sqlV32,/delete\s+from\s+public\.(patients|appointments|clinic_records)/i,'V32 migration must preserve operational data');
   assert.match(dashboardSource,/return \['dashboard','services','appointments','patients','accounts','staff','reports'\]/,'staff UI must not depend on per-section grants');
+  assert.match(dashboardSource,/expectedName=String\(data\.name\|\|''\)\.trim\(\)/,'patient save verification must normalize the name');
+  assert.match(dashboardSource,/expectedPhone=String\(data\.phone\|\|''\)\.trim\(\)/,'patient save verification must normalize the phone');
 
   console.log('PASS: booking, shared reads, appointment sync, odontogram sync, refresh persistence, permissions, SQL safeguards');
 })().catch(error=>{console.error(error);process.exitCode=1});

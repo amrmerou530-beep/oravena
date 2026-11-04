@@ -185,7 +185,7 @@ $('#editorForm').onsubmit=async e=>{
     }else if(k==='patients'){
       saved=await window.OravenaDB.savePatient(data,id);
       await reloadRemote();
-      const confirmed=db.patients.find(x=>x.id===saved.id);if(!confirmed||confirmed.name!==data.name||confirmed.phone!==data.phone||confirmed.email!==(data.email||''))throw new Error('SAVE_NOT_VISIBLE');
+      const confirmed=db.patients.find(x=>x.id===saved.id),expectedName=String(data.name||'').trim(),expectedPhone=String(data.phone||'').trim(),expectedEmail=String(data.email||'').trim().toLowerCase();if(!confirmed||String(confirmed.name||'').trim()!==expectedName||String(confirmed.phone||'').trim()!==expectedPhone||String(confirmed.email||'').trim().toLowerCase()!==expectedEmail)throw new Error('SAVE_NOT_VISIBLE');
     }else if(k==='appointments'){
       const patient=patientById(data.patientId)||{};
       saved=await window.OravenaDB.saveAppointment(data,id,patient);
