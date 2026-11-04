@@ -23,4 +23,12 @@ assert.equal(complete.clinicCollected,1800);
 assert.equal(complete.doctorCollected,1200);
 assert.equal(complete.remainingAmount,0);
 
+const discounted=context.calculate({amount:3000,discountPercent:10,paidAmount:1700,splitMode:'نسبة مئوية',clinicPercent:60});
+assert.equal(discounted.grossAmount,3000);
+assert.equal(discounted.discountAmount,300);
+assert.equal(discounted.amount,2700);
+assert.equal(discounted.remainingAmount,1000);
+assert.equal(discounted.clinicShare,1620);
+assert.equal(discounted.doctorShare,1080);
+
 console.log('PASS: partial payment is distributed proportionally and outstanding shares remain visible');

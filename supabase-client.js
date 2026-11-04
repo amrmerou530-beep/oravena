@@ -38,9 +38,9 @@
   let persistencePromise=null;
   async function ensurePersistence(){
     if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
-      if(!status?.ok||Number(status.version)<28)throw new Error('PERSISTENCE_V28_REQUIRED');
+      if(!status?.ok||Number(status.version)<30)throw new Error('PERSISTENCE_V30_REQUIRED');
       return status;
-    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V28_REQUIRED');throw error});
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V30_REQUIRED');throw error});
     return persistencePromise;
   }
   async function bootstrapAccount(){
@@ -350,9 +350,10 @@
     if(/invalid login credentials/i.test(message))return 'البريد أو كلمة المرور غير صحيحة.';
     if(/email not confirmed/i.test(message))return 'افتح رسالة تأكيد البريد الإلكتروني أولًا، ثم حاول مرة أخرى.';
     if(/already registered|user already exists/i.test(message))return 'هذا البريد مسجل بالفعل.';
-    if(/PERSISTENCE_V28_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف ORAVENA-V28-CLINICAL-WORKFLOW.sql مرة واحدة.';
+    if(/PERSISTENCE_V30_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف ORAVENA-V30-CLIENT-FIXES.sql مرة واحدة.';
     if(/SAVE_VERIFICATION_FAILED|SAVE_NOT_CONFIRMED|SAVE_NOT_VISIBLE/.test(message))return 'الخادم لم يؤكد حفظ كل التعديلات. لم نعرض رسالة نجاح.';
     if(/PERMISSION_DENIED|42501|permission denied/i.test(message))return 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
+    if(/INVALID_PATIENT_DATA/.test(message))return 'اكتب اسم المريض بصورة صحيحة، وإذا أضفت رقم هاتف فيجب ألا يقل عن 6 أرقام.';
     if(/SERVICE_NOT_AVAILABLE/.test(message))return 'الخدمة المختارة لم تعد متاحة.';
     if(/SESSION_EXPIRED|jwt|token/i.test(message))return 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى.';
     if(/network|fetch/i.test(message))return 'تعذر الاتصال بقاعدة البيانات. تحقق من الإنترنت وحاول مجددًا.';
