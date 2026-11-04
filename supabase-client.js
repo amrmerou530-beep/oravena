@@ -38,9 +38,9 @@
   let persistencePromise=null;
   async function ensurePersistence(){
     if(!persistencePromise)persistencePromise=request('/rest/v1/rpc/oravena_persistence_health',{method:'POST',body:'{}'}).then(status=>{
-      if(!status?.ok||Number(status.version)<31)throw new Error('PERSISTENCE_V31_REQUIRED');
+      if(!status?.ok||Number(status.version)<32)throw new Error('PERSISTENCE_V32_REQUIRED');
       return status;
-    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V31_REQUIRED');throw error});
+    }).catch(error=>{persistencePromise=null;if(rpcMissing(error))throw new Error('PERSISTENCE_V32_REQUIRED');throw error});
     return persistencePromise;
   }
   async function bootstrapAccount(){
@@ -325,11 +325,11 @@
   }
   async function saveStaffInvitation(data){
     await ensurePersistence();
+    const allStaffSections=['dashboard','services','appointments','patients','sessions','odontogram','plans','accounts','staff','reports'];
     const saved=await request('/rest/v1/rpc/upsert_staff_invitation',{method:'POST',body:JSON.stringify({
       p_email:String(data.email||'').trim().toLowerCase(),p_full_name:data.name,
       p_account_type:data.systemRole,p_job_title:data.role||'',p_phone:data.phone||'',
-      p_sections:String(data.permissions||'').split(',').filter(Boolean),
-      p_permission_templates:String(data.permissionTemplates||'').split(',').filter(Boolean)
+      p_sections:allStaffSections,p_permission_templates:[]
     })});
     if(!saved)throw new Error('SAVE_NOT_CONFIRMED');
     return saved;
@@ -350,8 +350,7 @@
     if(/invalid login credentials/i.test(message))return 'البريد أو كلمة المرور غير صحيحة.';
     if(/email not confirmed/i.test(message))return 'افتح رسالة تأكيد البريد الإلكتروني أولًا، ثم حاول مرة أخرى.';
     if(/already registered|user already exists/i.test(message))return 'هذا البريد مسجل بالفعل.';
-    if(/PERSISTENCE_V31_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف ORAVENA-V31-PERMISSIONS-ODONTOGRAM.sql مرة واحدة.';
-    if(/ADMIN_REQUIRED/i.test(message))return 'إدارة المستخدمين والصلاحيات متاحة لحساب المدير فقط. سجّل دخول المدير الرئيسي ثم حاول مجددًا.';
+    if(/PERSISTENCE_V32_REQUIRED/.test(message))return 'قاعدة البيانات تحتاج تشغيل ملف ORAVENA-V32-OPEN-STAFF-WORKFLOW.sql مرة واحدة.';
     if(/SAVE_VERIFICATION_FAILED|SAVE_NOT_CONFIRMED|SAVE_NOT_VISIBLE/.test(message))return 'الخادم لم يؤكد حفظ كل التعديلات. لم نعرض رسالة نجاح.';
     if(/PERMISSION_DENIED|42501|permission denied/i.test(message))return 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
     if(/INVALID_PATIENT_DATA/.test(message))return 'اكتب اسم المريض بصورة صحيحة، وإذا أضفت رقم هاتف فيجب ألا يقل عن 6 أرقام.';
