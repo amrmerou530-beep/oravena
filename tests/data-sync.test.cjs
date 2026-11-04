@@ -48,12 +48,12 @@ class MockServer{
       appointments:this.appointments.filter(a=>!patient||a.patient_id===this.patient.id),
       records:this.records.filter(r=>!patient||(r.patient_id===this.patient.id&&r.patient_visible)),
       staff:[],services:[{id:'svc-1',name_ar:'كشف',name_en:'Exam',price:500,service_type:'main',parent_service_id:null,active:true,sort_order:1}],
-      meta:{version:30,user_id:patient?'patient-user':'doctor-user'}
+      meta:{version:31,user_id:patient?'patient-user':'doctor-user'}
     };
   }
   async fetch(token,url,options={}){
     const endpoint=new URL(url).pathname;
-    if(endpoint.endsWith('/oravena_persistence_health'))return response(200,{ok:true,version:30});
+    if(endpoint.endsWith('/oravena_persistence_health'))return response(200,{ok:true,version:31});
     if(endpoint.endsWith('/doctor_schedule'))return response(200,[]);
     if(endpoint.endsWith('/oravena_ensure_patient_account'))return response(200,this.patient.id);
     if(endpoint.endsWith('/create_appointment_request')){
@@ -119,6 +119,8 @@ class MockServer{
   const sql=fs.readFileSync(path.join(root,'supabase','ORAVENA-DATA-SYNC-REPAIR-V22.sql'),'utf8');
   const sqlV28=fs.readFileSync(path.join(root,'supabase','ORAVENA-V28-CLINICAL-WORKFLOW.sql'),'utf8');
   const sqlV30=fs.readFileSync(path.join(root,'supabase','ORAVENA-V30-CLIENT-FIXES.sql'),'utf8');
+  const sqlV31=fs.readFileSync(path.join(root,'supabase','ORAVENA-V31-PERMISSIONS-ODONTOGRAM.sql'),'utf8');
+  const dashboardSource=fs.readFileSync(path.join(root,'dashboard.js'),'utf8');
   assert.match(sql,/begin;[\s\S]*commit;/i,'migration must be transactional');
   assert.match(sql,/r\.payload-'internal'/,'patient payload must remove internal session notes server-side');
   assert.match(sql,/patients_one_file_per_auth_user/,'one patient file per auth account is enforced');
@@ -131,6 +133,10 @@ class MockServer{
   assert.match(sqlV30,/v_phone<>''[\s\S]*length\(v_phone\)<6/i,'empty patient phone must be accepted while malformed supplied phones are rejected');
   assert.match(sqlV30,/account_type='doctor'[\s\S]*services/i,'doctor clinical access must not depend on a separate price permission');
   assert.doesNotMatch(sqlV30,/delete\s+from\s+public\.(patients|appointments|clinic_records)/i,'V30 migration must preserve operational data');
+  assert.match(sqlV31,/account_type='admin'/i,'V31 must recognize active admin profiles');
+  assert.match(sqlV31,/account_type='doctor'[\s\S]*odontogram/i,'V31 must allow doctors to manage odontograms without an extra permission');
+  assert.doesNotMatch(sqlV31,/delete\s+from\s+public\.(patients|appointments|clinic_records)/i,'V31 migration must preserve operational data');
+  assert.match(dashboardSource,/function completeTeethMap\(saved=\{\}\)/,'partial odontograms must be completed before rendering');
 
   console.log('PASS: booking, shared reads, appointment sync, odontogram sync, refresh persistence, permissions, SQL safeguards');
 })().catch(error=>{console.error(error);process.exitCode=1});
