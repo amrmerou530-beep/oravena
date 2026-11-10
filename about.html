@@ -12,10 +12,10 @@
   <link rel="apple-touch-icon" href="assets/oravena-icon-new.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css?v=9">
-  <link rel="stylesheet" href="story.css?v=9">
+  <link rel="stylesheet" href="story.css?v=35">
   <link rel="stylesheet" href="editorial.css?v=9">
 </head>
-<body class="subpage">
+<body class="subpage story-cinema">
   <a class="skip-link" href="#story">انتقل إلى القصة</a>
   <header class="topbar story-topbar">
     <a class="brand" href="index.html" aria-label="ORAVENA - الرئيسية"><img src="assets/oravena-logo-new.png" alt="ORAVENA"></a>
@@ -39,69 +39,98 @@
     <a class="button button-primary" href="index.html?booking=1" data-i18n="bookNow">احجز موعدًا</a>
   </nav>
 
-  <main id="story">
-    <section class="story-hero">
-      <img src="assets/oravena-hero.png" alt="مساحة استقبال حديثة في ORAVENA">
-      <div class="story-hero-shade"></div>
-      <div class="story-hero-copy reveal visible">
-        <p class="eyebrow" data-i18n="storyEyebrow">قصة ORAVENA</p>
-        <h1 data-i18n="storyTitle">مكانٌ يبدأ<br>بفهم الإنسان</h1>
-        <p data-i18n="storyIntro">لم نصمم ORAVENA حول كرسي العلاج، بل حول رحلة المريض كاملة: ما الذي يقلقه، وما الذي يحتاج أن يفهمه، وكيف يظل مطمئنًا بعد مغادرة العيادة.</p>
-      </div>
-      <a class="scroll-cue" href="#chapterOne" aria-label="ابدأ القصة"><span></span></a>
-    </section>
+  <main id="story" class="orv-story" data-story-scroll>
+    <div class="orv-story-stage" data-story-stage>
+      <canvas class="orv-story-particles" data-story-particles aria-hidden="true"></canvas>
+      <div class="orv-story-film" aria-hidden="true"></div>
 
-    <section class="story-chapter light" id="chapterOne">
-      <div class="chapter-number reveal">01</div>
-      <div class="chapter-copy reveal">
-        <p class="eyebrow dark" data-i18n="chapter1Eyebrow">الفكرة الأولى</p>
-        <h2 data-i18n="chapter1Title">الرعاية الحقيقية<br>تبدأ قبل العلاج</h2>
-        <p data-i18n="chapter1Text">تبدأ التجربة عندما يجد المريض موعدًا واضحًا واستقبالًا يعرف حالته، ثم يسمع شرحًا مفهومًا بدل المصطلحات المعقدة. لهذا بُنيت كل خطوة لتقلل القلق وتزيد الثقة.</p>
-      </div>
-      <blockquote class="reveal" data-i18n="chapter1Quote">«المريض لا يحتاج نتيجة جيدة فقط؛ يحتاج أن يفهم الطريق إليها.»</blockquote>
-    </section>
+      <section class="orv-story-scene orv-story-scene--beginning is-active" data-story-scene="0" aria-labelledby="storyScene01Title">
+        <img class="orv-story-bg" src="assets/story/01-beginning.webp" alt="مجسم سن مضيء في مشهد سينمائي" fetchpriority="high" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content orv-story-content--center">
+          <span class="orv-story-kicker" data-i18n="scene1Kicker">هنا تبدأ الحكاية</span>
+          <img class="orv-story-logo" src="assets/oravena-logo-new.png" alt="ORAVENA">
+          <h1 id="storyScene01Title" data-i18n="scene1Title">رعاية ترى الإنسان<br>قبل أن ترى السن</h1>
+          <p data-i18n="scene1Text">في ORAVENA يبدأ العلاج بفهمك: قلقك، وقتك، وما تحتاج إلى معرفته قبل أي خطوة.</p>
+          <span class="orv-story-scroll-hint"><i></i><b data-i18n="scrollHint">مرّر لاكتشاف القصة</b></span>
+        </div>
+        <div class="orv-story-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+      </section>
 
-    <section class="story-chapter dark">
-      <div class="chapter-number reveal">02</div>
-      <div class="chapter-copy reveal">
-        <p class="eyebrow" data-i18n="chapter2Eyebrow">رحلة واحدة</p>
-        <h2 data-i18n="chapter2Title">من أول موعد<br>إلى آخر متابعة</h2>
-        <p data-i18n="chapter2Text">المواعيد والتشخيص وخطة العلاج والجلسات والحسابات لا تعيش في جزر منفصلة. في ORAVENA تصبح سجلًا واحدًا منظمًا، يعرف كل شخص منه ما يحتاجه فقط ووفق صلاحيات واضحة.</p>
-      </div>
-      <div class="story-path reveal" aria-label="مراحل رحلة المريض">
-        <span><b>01</b><i data-i18n="path1">استماع</i></span><span><b>02</b><i data-i18n="path2">تشخيص</i></span><span><b>03</b><i data-i18n="path3">خطة</i></span><span><b>04</b><i data-i18n="path4">متابعة</i></span>
-      </div>
-    </section>
+      <section class="orv-story-scene orv-story-scene--vision" data-story-scene="1" aria-labelledby="storyScene02Title" aria-hidden="true">
+        <img class="orv-story-bg" src="assets/story/02-vision.webp" alt="أفق مستقبلي يعبر عن رؤية ORAVENA" loading="lazy" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content">
+          <span class="orv-story-kicker"><b>02</b><i data-i18n="scene2Kicker">رؤيتنا</i></span>
+          <h2 id="storyScene02Title" data-i18n="scene2Title">طب أكثر وضوحًا.<br>تجربة أكثر إنسانية.</h2>
+          <p data-i18n="scene2Text">نريد لكل مريض أن يرى الطريق كاملًا: تشخيص مفهوم، بدائل واضحة، وخطة يعرف أين تبدأ وإلى أين تصل.</p>
+          <div class="orv-story-glass-row">
+            <span data-i18n="visionPoint1">وضوح قبل القرار</span><span data-i18n="visionPoint2">خطة مترابطة</span><span data-i18n="visionPoint3">متابعة لا تنقطع</span>
+          </div>
+        </div>
+        <div class="orv-story-horizon" aria-hidden="true"></div>
+      </section>
 
-    <section class="story-chapter aqua">
-      <div class="chapter-number reveal">03</div>
-      <div class="chapter-copy reveal">
-        <p class="eyebrow dark" data-i18n="chapter3Eyebrow">تقنية لها معنى</p>
-        <h2 data-i18n="chapter3Title">التقنية تشرح،<br>ولا تعقّد</h2>
-        <p data-i18n="chapter3Text">نستخدم العرض ثلاثي الأبعاد والملفات الرقمية والمتابعة الآمنة لكي يرى المريض حالته وخطته بوضوح. التقنية هنا ليست استعراضًا؛ هي أداة لفهم أفضل وقرار أكثر وعيًا.</p>
-      </div>
-      <div class="story-orbit reveal" aria-hidden="true"><div class="orbit-ring one"></div><div class="orbit-ring two"></div><img src="assets/oravena-icon-new.png" alt=""></div>
-    </section>
+      <section class="orv-story-scene orv-story-scene--expertise" data-story-scene="2" aria-labelledby="storyScene03Title" aria-hidden="true">
+        <img class="orv-story-bg" src="assets/story/03-expertise.webp" alt="طبيب أسنان داخل عيادة ORAVENA الحديثة" loading="lazy" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content">
+          <span class="orv-story-kicker"><b>03</b><i data-i18n="scene3Kicker">خبرتنا</i></span>
+          <h2 id="storyScene03Title" data-i18n="scene3Title">الدقة ليست لحظة.<br>إنها طريقة عمل.</h2>
+          <p data-i18n="scene3Text">نقرأ التفاصيل، نشرح ما نراه، ونبني كل قرار على صورة كاملة لحالتك؛ لأن الخبرة الحقيقية تظهر في الخطوات الصغيرة.</p>
+          <div class="orv-story-signals"><span><i></i><b data-i18n="expertisePoint1">تشخيص مدروس</b></span><span><i></i><b data-i18n="expertisePoint2">قرار مشترك</b></span><span><i></i><b data-i18n="expertisePoint3">تنفيذ دقيق</b></span></div>
+        </div>
+        <div class="orv-story-focus-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </section>
 
-    <section class="story-chapter privacy">
-      <div class="chapter-number reveal">04</div>
-      <div class="chapter-copy reveal">
-        <p class="eyebrow" data-i18n="chapter4Eyebrow">ثقة محفوظة</p>
-        <h2 data-i18n="chapter4Title">كل معلومة<br>في مكانها الصحيح</h2>
-        <p data-i18n="chapter4Text">يرى المريض ما اعتمده الطبيب لمشاركته، بينما تبقى الملاحظات الداخلية والحسابات الحساسة داخل صلاحياتها. كل وصول أو تنزيل مهم يُسجل؛ لأن الخصوصية جزء من العلاج نفسه.</p>
-      </div>
-      <div class="privacy-card reveal"><span>ORAVENA CARE</span><strong data-i18n="privacyCardTitle">ملفك لك</strong><p data-i18n="privacyCardText">وصول آمن · صلاحيات دقيقة · سجل واضح</p></div>
-    </section>
+      <section class="orv-story-scene orv-story-scene--technology" data-story-scene="3" aria-labelledby="storyScene04Title" aria-hidden="true">
+        <img class="orv-story-bg" src="assets/story/04-technology.webp" alt="تقنيات التصوير والمسح الرقمي في طب الأسنان" loading="lazy" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content">
+          <span class="orv-story-kicker"><b>04</b><i data-i18n="scene4Kicker">التكنولوجيا</i></span>
+          <h2 id="storyScene04Title" data-i18n="scene4Title">تقنية تكشف التفاصيل.<br>ولا تخفي الإنسان.</h2>
+          <p data-i18n="scene4Text">المسح الرقمي، التصوير الدقيق، وخريطة الأسنان التفاعلية أدوات تجعل المعلومة أوضح والعلاج أكثر قابلية للتوقع.</p>
+          <div class="orv-story-tech-chips"><span data-i18n="techPoint1">تصوير رقمي</span><span data-i18n="techPoint2">خريطة تفاعلية</span><span data-i18n="techPoint3">سجل مترابط</span></div>
+        </div>
+        <div class="orv-story-scan" aria-hidden="true"><i></i><i></i></div>
+      </section>
 
-    <section class="story-finale">
-      <div class="reveal">
-        <img src="assets/oravena-icon-new.png" alt="">
-        <p class="eyebrow dark" data-i18n="finaleEyebrow">رؤيتنا</p>
-        <h2 data-i18n="finaleTitle">دقة طبية.<br>وضوح إنساني.</h2>
-        <p data-i18n="finaleText">هذه هي ORAVENA: تجربة علاجية تحترم وقت المريض وخصوصيته وحقه في الفهم.</p>
-        <div class="finale-actions"><a class="button button-primary" href="index.html?booking=1" data-i18n="bookNow">احجز موعدًا</a><a class="button button-ghost" href="index.html" data-i18n="backHome">العودة للرئيسية</a></div>
-      </div>
-    </section>
+      <section class="orv-story-scene orv-story-scene--patient" data-story-scene="4" aria-labelledby="storyScene05Title" aria-hidden="true">
+        <img class="orv-story-bg" src="assets/story/05-patient.webp" alt="حوار مطمئن بين الطبيب والمريض" loading="lazy" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content orv-story-content--end">
+          <span class="orv-story-kicker"><b>05</b><i data-i18n="scene5Kicker">تجربة المريض</i></span>
+          <h2 id="storyScene05Title" data-i18n="scene5Title">الراحة تبدأ<br>حين تعرف ما يحدث.</h2>
+          <p data-i18n="scene5Text">نستمع أولًا، نشرح بهدوء، ونبقي مواعيدك وخطتك وحسابك في رحلة واحدة؛ لتبقى مطمئنًا داخل العيادة وبعدها.</p>
+          <blockquote data-i18n="patientQuote">«الثقة ليست وعدًا نقوله؛ بل تجربة يشعر بها المريض في كل زيارة.»</blockquote>
+        </div>
+        <div class="orv-story-pulse" aria-hidden="true"><i></i><i></i></div>
+      </section>
+
+      <section class="orv-story-scene orv-story-scene--promise" data-story-scene="5" aria-labelledby="storyScene06Title" aria-hidden="true">
+        <img class="orv-story-bg" src="assets/story/06-promise.webp" alt="سن مضيء في ختام قصة ORAVENA" loading="lazy" decoding="async">
+        <div class="orv-story-shade"></div>
+        <div class="orv-story-content orv-story-content--center">
+          <span class="orv-story-kicker"><b>06</b><i data-i18n="scene6Kicker">وعدنا</i></span>
+          <img class="orv-story-logo orv-story-logo--final" src="assets/oravena-logo-new.png" alt="ORAVENA">
+          <h2 id="storyScene06Title" data-i18n="scene6Title">دقة طبية.<br>وضوح إنساني.</h2>
+          <p data-i18n="scene6Text">أن نحترم وقتك وخصوصيتك وحقك في الفهم، وأن تظل كل خطوة في علاجك واضحة ومحفوظة.</p>
+          <div class="orv-story-actions"><a class="button button-primary" href="index.html?booking=1" data-i18n="bookNow">احجز موعدًا</a><a class="button button-ghost" href="index.html" data-i18n="backHome">العودة للرئيسية</a></div>
+        </div>
+        <div class="orv-story-finale-ring" aria-hidden="true"></div>
+      </section>
+
+      <nav class="orv-story-progress" aria-label="فصول قصة ORAVENA">
+        <button class="is-active" type="button" data-story-go="0"><b>01</b><span data-i18n="progress1">البداية</span></button>
+        <button type="button" data-story-go="1"><b>02</b><span data-i18n="progress2">رؤيتنا</span></button>
+        <button type="button" data-story-go="2"><b>03</b><span data-i18n="progress3">خبرتنا</span></button>
+        <button type="button" data-story-go="3"><b>04</b><span data-i18n="progress4">التكنولوجيا</span></button>
+        <button type="button" data-story-go="4"><b>05</b><span data-i18n="progress5">تجربة المريض</span></button>
+        <button type="button" data-story-go="5"><b>06</b><span data-i18n="progress6">وعدنا</span></button>
+        <i class="orv-story-progress-line"><b data-story-progress-line></b></i>
+      </nav>
+      <div class="orv-story-counter" aria-hidden="true"><b data-story-counter>01</b><i></i><span>06</span></div>
+    </div>
   </main>
   <footer>
     <img src="assets/oravena-logo-new.png" alt="ORAVENA">
@@ -111,7 +140,7 @@
   </footer>
   <script src="supabase-config.js?v=23"></script>
   <script src="supabase-client.js?v=33"></script>
-  <script src="about.js?v=23"></script>
+  <script src="about.js?v=35"></script>
   <script src="pwa.js?v=26"></script>
 </body>
 </html>
