@@ -1,0 +1,11 @@
+/* يُضاف في نهاية ملف CSS الحالي. لا يغيّر أي قسم خارج الهيدر. */
+.hero{position:relative;isolation:isolate;overflow:hidden}   /* غيّر .hero لاسم كلاس الهيدر الفعلي */
+.ov-hero-media{position:absolute;inset:0;z-index:-1}
+.ov-hero-video{width:100%;height:100%;object-fit:cover;display:block;background:#06203a}
+/* طبقة تدرّج تحفظ وضوح النص (RTL: النص يمين) */
+.ov-hero-overlay{position:absolute;inset:0;
+  background:linear-gradient(270deg,rgba(6,32,58,.78) 0%,rgba(6,32,58,.45) 45%,rgba(6,32,58,.08) 100%)}
+@media (max-width:768px){
+  .ov-hero-overlay{background:linear-gradient(180deg,rgba(6,32,58,.70),rgba(6,32,58,.55))}
+}
+@media (prefers-reduced-motion:reduce){.ov-hero-video{display:none}.ov-hero-media{background:url(../assets/hero/oravena-hero-poster.jpg) center/cover}}
